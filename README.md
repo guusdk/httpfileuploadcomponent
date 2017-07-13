@@ -31,7 +31,7 @@ To run the application, execute
 A number of arguments can (and probably should) be added. A common execution is:
 
     java -jar httpfileuploadcomponent-<versionnumber>-jar-with-dependencies.jar \
-       --xmppHost openfire1.example.org
+       --xmppHost openfire1.example.org \
        --sharedSecret hqcUrfHtgE73FktcXwfrP
 
 This will start the application, connect it to an XMPP server with the provided
