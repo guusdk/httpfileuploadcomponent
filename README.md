@@ -8,6 +8,11 @@ This application allows occupants of an [XMPP](https://xmpp.org) multi-user chat
 
 More specifically, this is a [Jabber Component](https://xmpp.org/extensions/xep-0114.html) that implements [XEP-0363: HTTP File Upload](https://xmpp.org/extensions/xep-0363.html)
 
+Download
+--------
+
+The compiled application, as well as the source code, is available for download on the ['releases' page](https://github.com/guusdk/httpfileuploadcomponent/releases) of this project.
+
 Building
 --------
 
