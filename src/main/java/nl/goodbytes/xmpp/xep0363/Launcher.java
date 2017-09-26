@@ -40,19 +40,23 @@ public class Launcher
     private static final Logger Log = LoggerFactory.getLogger( Launcher.class );
     private final String xmppHost;
     private final Integer xmppPort;
+    private final String domain;
     private final String sharedSecret;
     private final String webHost;
     private final Integer webPort;
+    private final String announcedWebProtocol;
     private final String announcedWebHost;
     private final Integer announcedWebPort;
 
-    public Launcher( String xmppHost, Integer xmppPort, String sharedSecret, String webHost, Integer webPort, String announcedWebHost, Integer announcedWebPort )
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort )
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
+        this.domain = domain != null ? domain : "upload";;
         this.sharedSecret = sharedSecret;
         this.webHost = webHost != null ? webHost : getPublicAddress();
         this.webPort = webPort != null ? webPort : 12121;
+        this.announcedWebProtocol = announcedWebProtocol != null ? announcedWebProtocol : "http";
         this.announcedWebHost = announcedWebHost != null ? announcedWebHost : this.webHost;
         this.announcedWebPort = announcedWebPort != null ? announcedWebPort : this.webPort;
     }
@@ -82,6 +86,14 @@ public class Launcher
                         .hasArg()
                         .desc( "The TCP port number of the webserver. Defaults to 12121." )
                         .type( Integer.class )
+                        .build()
+        );
+
+        options.addOption(
+                Option.builder()
+                        .longOpt( "announcedWebProtocol" )
+                        .hasArg()
+                        .desc( "The Protocol that is to be used by the end users. Defaults to http" )
                         .build()
         );
 
@@ -121,6 +133,14 @@ public class Launcher
 
         options.addOption(
                 Option.builder()
+                        .longOpt( "domain" )
+                        .hasArg()
+                        .desc( "The domain that will be used for the component with the XMPP domain." )
+                        .build()
+        );
+
+        options.addOption(
+                Option.builder()
                         .longOpt( "sharedSecret" )
                         .hasArg()
                         .desc( "The shared secret, that authenticates this component with the XMPP domain." )
@@ -140,14 +160,19 @@ public class Launcher
             else
             {
                 final String webHost = line.getOptionValue( "webHost" );
-                final Integer webPort = (Integer) line.getParsedOptionValue( "webPort" );
+                final Integer webPort = line.hasOption( "webPort" ) ? Integer.parseInt(line.getOptionValue( "webPort" )) : null;
+                final String announcedWebProtocol = line.getOptionValue( "announcedWebProtocol" );
                 final String announcedWebHost = line.getOptionValue( "announcedWebHost" );
-                final Integer announcedWebPort = (Integer) line.getParsedOptionValue( "announcedWebPort" );
+                final Integer announcedWebPort = line.hasOption( "announcedWebPort" ) ? Integer.parseInt(line.getOptionValue( "announcedWebPort" )) : null;
                 final String xmppHost = line.getOptionValue( "xmppHost" );
-                final Integer xmppPort = (Integer) line.getParsedOptionValue( "xmppPort" );
+                final Integer xmppPort = line.hasOption( "xmppPort" ) ? Integer.parseInt(line.getOptionValue( "xmppPort" )) : null;
+                final String domain = line.getOptionValue( "domain" );
                 final String sharedSecret = line.getOptionValue( "sharedSecret" );
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, sharedSecret, webHost, webPort, announcedWebHost, announcedWebPort );
+                Log.info( "webPort: {}", webPort );
+                Log.info( "announcedWebPort: {}", announcedWebPort );
+
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, announcedWebProtocol, announcedWebHost, announcedWebPort );
                 launcher.start();
             }
         }
@@ -223,7 +248,6 @@ public class Launcher
     {
         Server jetty = null;
         ExternalComponentManager manager = null;
-        final String name = "upload";
         try
         {
             Log.info( "Starting webserver..." );
@@ -242,15 +266,15 @@ public class Launcher
 
             Log.info( "Webserver started at {}:{}", connector.getHost(), connector.getLocalPort() );
 
-            final URL endpoint = new URL( "http", announcedWebHost, announcedWebPort, "" );
-            Log.info( "Starting external component..." );
-            final Component component = new Component( name, endpoint );
+            final URL endpoint = new URL( announcedWebProtocol, announcedWebHost, announcedWebPort, "" );
+            Log.info( "Starting external component with endpoint {}", endpoint.toExternalForm() );
+            final Component component = new Component( domain, endpoint );
             manager = new ExternalComponentManager( xmppHost, xmppPort );
             if ( sharedSecret != null )
             {
-                manager.setSecretKey( name, sharedSecret );
+                manager.setSecretKey( domain, sharedSecret );
             }
-            manager.addComponent( name, component );
+            manager.addComponent( domain, component );
             Log.info( "External component registered to XMPP domain." );
 
             Log.info( "Ready!" );
@@ -282,7 +306,7 @@ public class Launcher
 
                 if ( manager != null )
                 {
-                    manager.removeComponent( name );
+                    manager.removeComponent( domain );
                 }
             }
             catch ( Exception e )
