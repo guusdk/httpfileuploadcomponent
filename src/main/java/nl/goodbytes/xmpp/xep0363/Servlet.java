@@ -55,7 +55,7 @@ public class Servlet extends HttpServlet
 
         try
         {
-            return UUID.fromString( parts[ 1 ] );
+            return UUID.fromString( parts[ parts.length - 2 ] );
         }
         catch ( IllegalArgumentException e )
         {

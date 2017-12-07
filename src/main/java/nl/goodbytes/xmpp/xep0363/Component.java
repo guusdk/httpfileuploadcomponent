@@ -25,6 +25,8 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.PacketError;
 
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * A XMPP component that implements XEP-0363.
@@ -34,7 +36,12 @@ import java.net.URL;
  */
 public class Component extends AbstractComponent
 {
-    public final static String NAMESPACE = "urn:xmpp:http:upload";
+    // Earlier namespace, used before v0.3.0 of XEP-0363
+    public final static String NAMESPACE_EXP = "urn:xmpp:http:upload";
+
+    // Namespace from version 0.3.0 onwards.
+    public final static String NAMESPACE = "urn:xmpp:http:upload:0";
+
     private static final Logger Log = LoggerFactory.getLogger( Component.class );
     private final String name;
     private final String endpoint;
@@ -91,7 +98,7 @@ public class Component extends AbstractComponent
     @Override
     protected String[] discoInfoFeatureNamespaces()
     {
-        return new String[] { NAMESPACE };
+        return new String[] { NAMESPACE, NAMESPACE_EXP };
     }
 
     @Override
@@ -115,27 +122,51 @@ public class Component extends AbstractComponent
     protected IQ handleIQGet( IQ iq ) throws Exception
     {
         final Element request = iq.getChildElement();
-        if ( !NAMESPACE.equals( request.getNamespaceURI() ) || !request.getName().equals( "request" ) )
+        final Collection<String> namespaces = Arrays.asList( NAMESPACE, NAMESPACE_EXP);
+        if ( !namespaces.contains( request.getNamespaceURI() ) || !request.getName().equals( "request" ) )
         {
             return null;
         }
 
         Log.info( "Entity '{}' tries to obtain slot.", iq.getFrom() );
-        if ( request.element( "filename" ) == null || request.element( "filename" ).getTextTrim().isEmpty() )
+        String fileName = null;
+        if ( request.attributeValue( "filename" ) != null && !request.attributeValue( "filename" ).trim().isEmpty() )
+        {
+            fileName = request.attributeValue( "filename" ).trim();
+        }
+
+        if ( request.element( "filename" ) != null && !request.element( "filename" ).getTextTrim().isEmpty() )
+        {
+            fileName = request.element( "filename" ).getTextTrim();
+        }
+
+        if ( fileName == null )
         {
             final IQ response = IQ.createResultIQ( iq );
             response.setError( PacketError.Condition.bad_request );
             return response;
         }
 
-        if ( request.element( "size" ) == null || request.element( "size" ).getTextTrim().isEmpty() )
+        // TODO validate the file name (path traversal, etc).
+
+        String size = null;
+        if ( request.attributeValue( "size" ) != null && !request.attributeValue( "size" ).isEmpty() )
+        {
+            size = request.attributeValue( "size" ).trim();
+        }
+
+        if ( request.element( "size" ) != null && !request.element( "size" ).getTextTrim().isEmpty() )
+        {
+            size = request.element( "size" ).getTextTrim();
+        }
+
+        if ( size == null )
         {
             final IQ response = IQ.createResultIQ( iq );
             response.setError( PacketError.Condition.bad_request );
             return response;
         }
 
-        final String fileName = request.element( "filename" ).getTextTrim(); // TODO validate the file name (path traversal, etc).
         final long fileSize;
         try
         {
@@ -158,18 +189,17 @@ public class Component extends AbstractComponent
         {
             final IQ response = IQ.createResultIQ( iq );
             final PacketError error = new PacketError( PacketError.Condition.not_acceptable, PacketError.Type.modify, "File too large. Maximum file size is " + ex.getMaximum() + " bytes." );
-            error.getElement().addElement( "file-too-large", NAMESPACE ).addElement( "max-file-size" ).addText( Long.toString( ex.getMaximum() ) );
+            error.getElement().addElement( "file-too-large", iq.getChildElement().getNamespaceURI() ).addElement( "max-file-size" ).addText( Long.toString( ex.getMaximum() ) );
             response.setError( error );
             return response;
         }
-
 
         final URL url = new URL( endpoint + "/" + slot.getUuid() + "/" + fileName );
 
         Log.info( "Entity '{}' obtained slot for '{}' ({} bytes): {}", iq.getFrom(), fileName, fileSize, url.toExternalForm() );
 
         final IQ response = IQ.createResultIQ( iq );
-        final Element slotElement = response.setChildElement( "slot", NAMESPACE );
+        final Element slotElement = response.setChildElement( "slot", iq.getChildElement().getNamespaceURI() );
         slotElement.addElement( "put" ).setText( url.toExternalForm() );
         slotElement.addElement( "get" ).setText( url.toExternalForm() );
         return response;
