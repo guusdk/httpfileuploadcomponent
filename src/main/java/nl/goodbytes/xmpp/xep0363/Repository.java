@@ -31,6 +31,8 @@ public interface Repository
 {
     void initialize() throws IOException;
 
+    void destroy() throws IOException;
+
     boolean contains( UUID uuid ) throws IOException;
 
     String calculateETagHash( UUID uuid ) throws IOException;

@@ -82,6 +82,26 @@ public class Servlet extends HttpServlet
     }
 
     @Override
+    public void destroy()
+    {
+        Log.info( "Destroying..." );
+        super.destroy();
+
+        try
+        {
+            if ( repository != null )
+            {
+                repository.destroy();
+            }
+        }
+        catch ( Exception e )
+        {
+            Log.warn( "Unable to destroy the repository.", e );
+        }
+        Log.info( "Destroyed." );
+    }
+
+    @Override
     protected void doGet( HttpServletRequest req, HttpServletResponse resp ) throws ServletException, IOException
     {
         Log.info( "Processing GET request... ({} requesting from {})", req.getRemoteAddr(), req.getRequestURI() );

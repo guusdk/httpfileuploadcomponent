@@ -17,13 +17,17 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.READ;
@@ -38,40 +42,89 @@ import static java.nio.file.StandardOpenOption.READ;
  */
 public class TempDirectoryRepository implements Repository
 {
+    private static final Logger Log = LoggerFactory.getLogger( TempDirectoryRepository.class );
+
+    private Timer timer;
+
     protected Path repository;
 
     @Override
     public void initialize() throws IOException
     {
         repository = Files.createTempDirectory( "xmppfileupload" );
+        repository.toFile().deleteOnExit();
+
+        // Perform a synchronous purge before start, which ensurs that a) purging is possible, b) space is available.
+        purge();
+
+        // Schedule periodic asynchronous purges.
+        timer = new Timer( "xmppfileupload-cleanup", true );
+        timer.schedule( new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    purge();
+                }
+                catch ( Exception e )
+                {
+                    Log.warn( "An unexpected error occurred while purging the repository.", e );
+                }
+            }
+        }, 5 * 60 * 1000, 5 * 60 * 1000 );
+
+        Log.info( "Initialized repository in: {}", repository );
+    }
+
+    @Override
+    public void destroy() throws IOException
+    {
+        if ( timer != null )
+        {
+            timer.cancel();
+        }
     }
 
     @Override
     public boolean contains( UUID uuid ) throws IOException
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
-        return Files.exists( path );
+        final boolean result = Files.exists( path );
+
+        Log.debug( "UUID '{}' {} exist in respository.", uuid, result ? "does" : "does not" );
+        return result;
     }
 
     @Override
     public String calculateETagHash( UUID uuid ) throws IOException
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
-        return String.valueOf( path.hashCode() + Files.getLastModifiedTime( path ).hashCode() );
+        final String result = String.valueOf( path.hashCode() + Files.getLastModifiedTime( path ).hashCode() );
+
+        Log.debug( "UUID '{}' ETag value: {}", uuid, result );
+        return result;
     }
 
     @Override
     public String getContentType( UUID uuid ) throws IOException
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
-        return Files.probeContentType( path );
+        final String result = Files.probeContentType( path );
+
+        Log.debug( "UUID '{}' content type: {}", uuid, result );
+        return result;
     }
 
     @Override
     public long getSize( UUID uuid ) throws IOException
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
-        return Files.size( path );
+        final long result = Files.size( path );
+
+        Log.debug( "UUID '{}' size: {} bytes", uuid, result );
+        return result;
     }
 
     @Override
@@ -86,5 +139,93 @@ public class TempDirectoryRepository implements Repository
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         return Files.newOutputStream( path, CREATE );
+    }
+
+    public void purge() throws IOException
+    {
+        final File[] files = repository.toFile().listFiles();
+        if ( files == null )
+        {
+            Log.debug( "No need to purge the repository, as it does not contain any files." );
+            return;
+        }
+
+        final long used = getUsedSpace( repository );
+        final long free = getUsableSpace( repository );
+        Log.debug( "The repository currently uses {} bytes, while there's {} bytes of usable space left.", used, free );
+
+        if ( used == 0 || used < free )
+        {
+            Log.debug( "No need to purge the repository, as the free space is larger than the used space." );
+            return;
+        }
+
+        // Files modified the longest time ago are the first to be purged.
+        Arrays.sort( files, new Comparator<File>()
+        {
+            @Override
+            public int compare( File o1, File o2 )
+            {
+                return Long.compare( o1.lastModified(), o2.lastModified() );
+            }
+        } );
+
+        long deletedTotal = 0;
+        for ( final File file : files )
+        {
+            final long deleted = delete( file.toPath() );
+
+            Log.debug( "Purging repository: deleting: {} ({} bytes)", file, deleted );
+
+            deletedTotal += deleted;
+
+            if ( used - deletedTotal <= 0 || used - deletedTotal < free + deletedTotal )
+            {
+                break;
+            }
+        }
+
+        Log.info( "The repository was purged: {} bytes were deleted.", deletedTotal );
+    }
+
+    protected static long getUsableSpace( Path path ) throws IOException
+    {
+        return Files.getFileStore( path ).getUsableSpace();
+    }
+
+    public static long getUsedSpace( Path path ) throws IOException
+    {
+        final AtomicLong size = new AtomicLong( 0 );
+        Files.walkFileTree( path, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                size.addAndGet(attrs.size());
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+        return size.get();
+    }
+
+    protected static long delete( Path path ) throws IOException
+    {
+        final AtomicLong size = new AtomicLong( 0 );
+
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                size.addAndGet( attrs.size() );
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+        return size.get();
     }
 }
