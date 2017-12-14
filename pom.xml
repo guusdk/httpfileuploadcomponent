@@ -6,7 +6,9 @@
   <artifactId>httpfileuploadcomponent</artifactId>
   <version>1.1.2-SNAPSHOT</version>
 
+  <name>HTTP File Upload Component</name>
   <description>Implementation of an XMPP External Component that implements XEP-0363 'HTTP File Upload'.</description>
+  <url>https://github.com/guusdk/httpfileuploadcomponent</url>
   <inceptionYear>2017</inceptionYear>
 
   <licenses>
