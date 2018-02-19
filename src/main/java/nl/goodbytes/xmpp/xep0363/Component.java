@@ -122,11 +122,12 @@ public class Component extends AbstractComponent
     protected IQ handleIQGet( IQ iq ) throws Exception
     {
         final Element request = iq.getChildElement();
-        final Collection<String> namespaces = Arrays.asList( NAMESPACE, NAMESPACE_EXP);
+        final Collection<String> namespaces = Arrays.asList( NAMESPACE, NAMESPACE_EXP );
         if ( !namespaces.contains( request.getNamespaceURI() ) || !request.getName().equals( "request" ) )
         {
             return null;
         }
+        final boolean isPre030Style = NAMESPACE_EXP.equals( request.getNamespaceURI() );
 
         Log.info( "Entity '{}' tries to obtain slot.", iq.getFrom() );
         String fileName = null;
@@ -200,8 +201,16 @@ public class Component extends AbstractComponent
 
         final IQ response = IQ.createResultIQ( iq );
         final Element slotElement = response.setChildElement( "slot", iq.getChildElement().getNamespaceURI() );
-        slotElement.addElement( "put" ).setText( url.toExternalForm() );
-        slotElement.addElement( "get" ).setText( url.toExternalForm() );
+        if ( isPre030Style )
+        {
+            slotElement.addElement( "put" ).setText( url.toExternalForm() );
+            slotElement.addElement( "get" ).setText( url.toExternalForm() );
+        }
+        else
+        {
+            slotElement.addElement( "put" ).addAttribute( "url", url.toExternalForm() );
+            slotElement.addElement( "get" ).addAttribute( "url", url.toExternalForm() );
+        }
         return response;
     }
 }
