@@ -4,7 +4,7 @@
 
   <groupId>nl.goodbytes.xmpp.xep</groupId>
   <artifactId>httpfileuploadcomponent</artifactId>
-  <version>1.1.3-SNAPSHOT</version>
+  <version>1.1.3</version>
 
   <name>HTTP File Upload Component</name>
   <description>Implementation of an XMPP External Component that implements XEP-0363 'HTTP File Upload'.</description>
@@ -33,7 +33,7 @@
     <url>https://github.com/guusdk/httpfileuploadcomponent</url>
     <connection>scm:git:git://github.com/guusdk/httpfileuploadcomponent.git</connection>
     <developerConnection>scm:git:git@github.com:guusdk/httpfileuploadcomponent.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v1.1.3</tag>
   </scm>
 
   <developers>
