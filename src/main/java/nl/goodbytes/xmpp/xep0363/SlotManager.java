@@ -62,6 +62,11 @@ public class SlotManager
         return maxFileSize;
     }
 
+    public void setMaxFileSize( long maxFileSize )
+    {
+        this.maxFileSize = maxFileSize;
+    }
+
     public Slot getSlot( JID from, String fileName, long fileSize ) throws TooLargeException
     {
         if ( maxFileSize > 0 && fileSize > maxFileSize )

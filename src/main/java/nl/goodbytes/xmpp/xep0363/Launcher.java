@@ -52,7 +52,7 @@ public class Launcher
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
-        this.domain = domain != null ? domain : "upload";;
+        this.domain = domain != null ? domain : "upload";
         this.sharedSecret = sharedSecret;
         this.webHost = webHost != null ? webHost : getPublicAddress();
         this.webPort = webPort != null ? webPort : 12121;
@@ -147,6 +147,16 @@ public class Launcher
                         .build()
         );
 
+        options.addOption(
+                Option.builder()
+                        .longOpt( "maxFileSize" )
+                        .hasArg()
+                        .desc( "The maximum allowed size per file, in bytes. Use -1 to disable file size limit. Defaults to 5242880 (five MB)." )
+                        .optionalArg( true )
+                        .type( Long.class )
+                        .build()
+        );
+
         try
         {
             final CommandLineParser parser = new DefaultParser();
@@ -168,11 +178,19 @@ public class Launcher
                 final Integer xmppPort = line.hasOption( "xmppPort" ) ? Integer.parseInt(line.getOptionValue( "xmppPort" )) : null;
                 final String domain = line.getOptionValue( "domain" );
                 final String sharedSecret = line.getOptionValue( "sharedSecret" );
+                final Long maxFileSize = line.hasOption( "maxFileSize" ) ? Long.parseLong(line.getOptionValue( "maxFileSize" )) : null;
 
                 Log.info( "webPort: {}", webPort );
                 Log.info( "announcedWebPort: {}", announcedWebPort );
 
                 final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, announcedWebProtocol, announcedWebHost, announcedWebPort );
+
+                if ( maxFileSize != null )
+                {
+                    SlotManager.getInstance().setMaxFileSize( maxFileSize );
+                }
+                Log.info( "maxFileSize: {}", SlotManager.getInstance().getMaxFileSize() );
+
                 launcher.start();
             }
         }
