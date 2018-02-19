@@ -33,9 +33,10 @@ import java.util.concurrent.TimeUnit;
 // TODO: persist internal state to allow for restart survival.
 public class SlotManager
 {
+    public static final long DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024;
     private static SlotManager INSTANCE = null;
     private final Cache<UUID, Slot> slots;
-    private long maxFileSize = 5 * 1024 * 1024;
+    private long maxFileSize = DEFAULT_MAX_FILE_SIZE;
     private long putExpiryValue = 5;
     private TimeUnit putExpiryUnit = TimeUnit.MINUTES;
 
