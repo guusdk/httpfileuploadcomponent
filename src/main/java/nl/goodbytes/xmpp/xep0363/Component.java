@@ -170,7 +170,7 @@ public class Component extends AbstractComponent
         final long fileSize;
         try
         {
-            fileSize = Long.parseLong( request.element( "size" ).getTextTrim() );
+            fileSize = Long.parseLong( size );
         }
         catch ( NumberFormatException e )
         {
