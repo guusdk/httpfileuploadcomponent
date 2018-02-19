@@ -112,7 +112,7 @@ public class Component extends AbstractComponent
             final Element configForm = response.getChildElement().addElement( "x", "jabber:x:data" );
             configForm.addAttribute( "type", "result" );
             configForm.addElement( "field" ).addAttribute( "var", "FORM_TYPE" ).addAttribute( "type", "hidden" ).addElement( "value" ).addText( NAMESPACE );
-            configForm.addElement( "field" ).addAttribute( "var", "max-file-size" ).addText( Long.toString( SlotManager.getInstance().getMaxFileSize() ) );
+            configForm.addElement( "field" ).addAttribute( "var", "max-file-size" ).addElement( "value" ).addText( Long.toString( SlotManager.getInstance().getMaxFileSize() ) );
         }
 
         return response;
