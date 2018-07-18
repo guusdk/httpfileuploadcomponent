@@ -24,6 +24,7 @@ import org.xmpp.component.AbstractComponent;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.PacketError;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -195,7 +196,7 @@ public class Component extends AbstractComponent
             return response;
         }
 
-        final URL url = new URL( endpoint + "/" + slot.getUuid() + "/" + fileName );
+        final URL url = new URL( URI.create( endpoint + "/" + slot.getUuid() + "/" + fileName ).toASCIIString() );
 
         Log.info( "Entity '{}' obtained slot for '{}' ({} bytes): {}", iq.getFrom(), fileName, fileSize, url.toExternalForm() );
 

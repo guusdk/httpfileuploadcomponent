@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URI;
 import java.util.UUID;
 
 
@@ -228,7 +229,7 @@ public class Servlet extends HttpServlet
             }
         }
 
-        resp.setHeader( "Location", req.getRequestURL().toString() );
+        resp.setHeader( "Location", URI.create( req.getRequestURL().toString() ).toASCIIString() );
         resp.setStatus( HttpServletResponse.SC_CREATED );
         Log.info( "... responded with CREATED. Stored data from the request body in the repository." );
     }
