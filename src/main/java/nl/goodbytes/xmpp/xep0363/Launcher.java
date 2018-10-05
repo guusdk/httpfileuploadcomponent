@@ -17,6 +17,7 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
+import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
 import org.apache.commons.cli.*;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -47,8 +48,9 @@ public class Launcher
     private final String announcedWebProtocol;
     private final String announcedWebHost;
     private final Integer announcedWebPort;
+    private final Repository repository;
 
-    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort )
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, Repository repository )
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
@@ -59,6 +61,7 @@ public class Launcher
         this.announcedWebProtocol = announcedWebProtocol != null ? announcedWebProtocol : "http";
         this.announcedWebHost = announcedWebHost != null ? announcedWebHost : this.webHost;
         this.announcedWebPort = announcedWebPort != null ? announcedWebPort : this.webPort;
+        this.repository = repository != null ? repository : new TempDirectoryRepository();
     }
 
     public static void main( String[] args )
@@ -147,6 +150,17 @@ public class Launcher
                         .build()
         );
 
+        final OptionGroup repoType = new OptionGroup();
+
+        repoType.addOption(
+                Option.builder()
+                        .longOpt( "tempFileRepo" )
+                        .hasArg( false )
+                        .desc( "Store files in the temporary directory provided by the file system." )
+                        .build()
+        );
+        options.addOptionGroup( repoType );
+
         options.addOption(
                 Option.builder()
                         .longOpt( "maxFileSize" )
@@ -180,10 +194,19 @@ public class Launcher
                 final String sharedSecret = line.getOptionValue( "sharedSecret" );
                 final Long maxFileSize = line.hasOption( "maxFileSize" ) ? Long.parseLong(line.getOptionValue( "maxFileSize" )) : null;
 
+                final Repository repository;
+                if ( line.hasOption( "tempFileRepo" ) )
+                {
+                    repository = new TempDirectoryRepository();
+                }
+                else
+                {
+                    repository = null;
+                }
                 Log.info( "webPort: {}", webPort );
                 Log.info( "announcedWebPort: {}", announcedWebPort );
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, announcedWebProtocol, announcedWebHost, announcedWebPort );
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, announcedWebProtocol, announcedWebHost, announcedWebPort, repository );
 
                 if ( maxFileSize != null )
                 {
@@ -268,6 +291,9 @@ public class Launcher
         ExternalComponentManager manager = null;
         try
         {
+            Log.info( "Starting repository..." );
+            RepositoryManager.getInstance().initialize( repository );
+
             Log.info( "Starting webserver..." );
 
             jetty = new Server();
@@ -326,6 +352,8 @@ public class Launcher
                 {
                     manager.removeComponent( domain );
                 }
+
+                RepositoryManager.getInstance().destroy();
             }
             catch ( Exception e )
             {

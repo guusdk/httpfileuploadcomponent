@@ -17,11 +17,9 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
-import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -39,8 +37,6 @@ import java.util.UUID;
 public class Servlet extends HttpServlet
 {
     private static final Logger Log = LoggerFactory.getLogger( Servlet.class );
-
-    private Repository repository = null;
 
     public static UUID uuidFromPath( String path )
     {
@@ -66,47 +62,10 @@ public class Servlet extends HttpServlet
     }
 
     @Override
-    public void init( ServletConfig config ) throws ServletException
-    {
-        Log.info( "Initializing..." );
-        super.init( config );
-
-        try
-        {
-            repository = new TempDirectoryRepository();
-            repository.initialize();
-        }
-        catch ( IOException e )
-        {
-            throw new ServletException( "Unable to create temporary directory.", e );
-        }
-        Log.info( "Initialized." );
-    }
-
-    @Override
-    public void destroy()
-    {
-        Log.info( "Destroying..." );
-        super.destroy();
-
-        try
-        {
-            if ( repository != null )
-            {
-                repository.destroy();
-            }
-        }
-        catch ( Exception e )
-        {
-            Log.warn( "Unable to destroy the repository.", e );
-        }
-        Log.info( "Destroyed." );
-    }
-
-    @Override
     protected void doGet( HttpServletRequest req, HttpServletResponse resp ) throws ServletException, IOException
     {
         Log.info( "Processing GET request... ({} requesting from {})", req.getRemoteAddr(), req.getRequestURI() );
+        final Repository repository = RepositoryManager.getInstance().getRepository();
         if ( repository == null )
         {
             resp.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
@@ -189,6 +148,7 @@ public class Servlet extends HttpServlet
     protected void doPut( HttpServletRequest req, HttpServletResponse resp ) throws ServletException, IOException
     {
         Log.info( "Processing PUT request... ({} submitting to {})", req.getRemoteAddr(), req.getRequestURI() );
+        final Repository repository = RepositoryManager.getInstance().getRepository();
         if ( repository == null )
         {
             resp.sendError( HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
