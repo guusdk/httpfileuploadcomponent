@@ -24,7 +24,6 @@ import org.xmpp.component.AbstractComponent;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.PacketError;
 
-import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,18 +44,13 @@ public class Component extends AbstractComponent
 
     private static final Logger Log = LoggerFactory.getLogger( Component.class );
     private final String name;
-    private final String endpoint;
 
     /**
      * Instantiates a new component.
      *
-     * The URL that's provided in the second argument is used as the base URL for all client interaction. More
-     * specifically, this value is used to generate the slot filenames. The URL should be accessible for end-users.
-     *
      * @param name     The component name (cannot be null or an empty String).
-     * @param endpoint The base URL for HTTP interaction (cannot be null).
      */
-    public Component( String name, URL endpoint )
+    public Component( String name )
     {
         super();
 
@@ -64,12 +58,8 @@ public class Component extends AbstractComponent
         {
             throw new IllegalArgumentException( "Argument 'name' cannot be null or an empty String." );
         }
-        if ( endpoint == null )
-        {
-            throw new IllegalArgumentException( "Argument 'endpoint' cannot be null." );
-        }
+
         this.name = name.trim();
-        this.endpoint = endpoint.toExternalForm();
     }
 
     @Override
@@ -196,21 +186,22 @@ public class Component extends AbstractComponent
             return response;
         }
 
-        final URL url = new URL( URI.create( endpoint + "/" + slot.getUuid() + "/" + fileName ).toASCIIString() );
+        final URL putUrl = slot.getPutUrl();
+        final URL getUrl = slot.getGetUrl();
 
-        Log.info( "Entity '{}' obtained slot for '{}' ({} bytes): {}", iq.getFrom(), fileName, fileSize, url.toExternalForm() );
+        Log.info( "Entity '{}' obtained slot for '{}' ({} bytes). PUT-URL: {} GET-URL: {}", iq.getFrom(), fileName, fileSize, putUrl, getUrl );
 
         final IQ response = IQ.createResultIQ( iq );
         final Element slotElement = response.setChildElement( "slot", iq.getChildElement().getNamespaceURI() );
         if ( isPre030Style )
         {
-            slotElement.addElement( "put" ).setText( url.toExternalForm() );
-            slotElement.addElement( "get" ).setText( url.toExternalForm() );
+            slotElement.addElement( "put" ).setText( putUrl.toExternalForm() );
+            slotElement.addElement( "get" ).setText( getUrl.toExternalForm() );
         }
         else
         {
-            slotElement.addElement( "put" ).addAttribute( "url", url.toExternalForm() );
-            slotElement.addElement( "get" ).addAttribute( "url", url.toExternalForm() );
+            slotElement.addElement( "put" ).addAttribute( "url", putUrl.toExternalForm() );
+            slotElement.addElement( "get" ).addAttribute( "url", getUrl.toExternalForm() );
         }
         return response;
     }

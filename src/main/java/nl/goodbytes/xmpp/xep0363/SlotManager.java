@@ -21,6 +21,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.xmpp.packet.JID;
 
+import java.net.URL;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +40,9 @@ public class SlotManager
     private long maxFileSize = DEFAULT_MAX_FILE_SIZE;
     private long putExpiryValue = 5;
     private TimeUnit putExpiryUnit = TimeUnit.MINUTES;
+    private String webProtocol;
+    private String webHost;
+    private Integer webPort;
 
 
     private SlotManager()
@@ -90,5 +94,35 @@ public class SlotManager
         }
 
         return slot;
+    }
+
+    public void setWebProtocol( final String webProtocol )
+    {
+        this.webProtocol = webProtocol;
+    }
+
+    public String getWebProtocol()
+    {
+        return webProtocol;
+    }
+
+    public void setWebHost( final String webHost )
+    {
+        this.webHost = webHost;
+    }
+
+    public String getWebHost()
+    {
+        return webHost;
+    }
+
+    public void setWebPort( final int webPort )
+    {
+        this.webPort = webPort;
+    }
+
+    public int getWebPort()
+    {
+        return webPort;
     }
 }

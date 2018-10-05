@@ -64,12 +64,17 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
                                            end users. Defaults to http
             --domain <arg>                 The domain that will be used for the
                                            component with the XMPP domain.
+            --fileRepo <arg>               Store files in a directory provided by
+                                           the file system. Provide the desired
+                                           path as a value. Path must exist.
          -h,--help                         Displays this help text.
             --maxFileSize <arg>            The maximum allowed size per file, in
                                            bytes. Use -1 to disable file size
                                            limit. Defaults to 5242880 (five MB).
             --sharedSecret <arg>           The shared secret, that authenticates
                                            this component with the XMPP domain.
+            --tempFileRepo                 Store files in the temporary directory
+                                           provided by the file system.
             --webHost <arg>                The hostname or IP address on which the
                                            webserver will be ran. Defaults to an
                                            arbitrary, non-local address of this
@@ -83,6 +88,7 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
             --xmppPort <arg>               The TCP port number on the xmppHost, to
                                            which a connection will be made.
                                            Defaults to 5275.
+
 
 
 

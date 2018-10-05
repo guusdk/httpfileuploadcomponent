@@ -17,6 +17,7 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
+import nl.goodbytes.xmpp.xep0363.repository.DirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
 import org.apache.commons.cli.*;
 import org.eclipse.jetty.server.Server;
@@ -27,6 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Enumeration;
@@ -49,8 +53,9 @@ public class Launcher
     private final String announcedWebHost;
     private final Integer announcedWebPort;
     private final Repository repository;
+    private final Long maxFileSize;
 
-    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, Repository repository )
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, Repository repository, Long maxFileSize )
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
@@ -62,6 +67,7 @@ public class Launcher
         this.announcedWebHost = announcedWebHost != null ? announcedWebHost : this.webHost;
         this.announcedWebPort = announcedWebPort != null ? announcedWebPort : this.webPort;
         this.repository = repository != null ? repository : new TempDirectoryRepository();
+        this.maxFileSize = maxFileSize != null ? maxFileSize : SlotManager.DEFAULT_MAX_FILE_SIZE;
     }
 
     public static void main( String[] args )
@@ -159,6 +165,13 @@ public class Launcher
                         .desc( "Store files in the temporary directory provided by the file system." )
                         .build()
         );
+        repoType.addOption(
+                Option.builder()
+                        .longOpt( "fileRepo" )
+                        .hasArg()
+                        .desc( "Store files in a directory provided by the file system. Provide the desired path as a value. Path must exist." )
+                        .build()
+        );
         options.addOptionGroup( repoType );
 
         options.addOption(
@@ -199,21 +212,23 @@ public class Launcher
                 {
                     repository = new TempDirectoryRepository();
                 }
+                else if (line.hasOption( "fileRepo"))
+                {
+                    final String directory = line.getOptionValue( "fileRepo" );
+                    final Path path;
+                    try {
+                        path = Paths.get( directory );
+                    } catch ( InvalidPathException e ) {
+                        throw new ParseException( "Invalid value for 'fileRepo' option: " + e.getMessage() );
+                    }
+                    repository = new DirectoryRepository( path );
+                }
                 else
                 {
                     repository = null;
                 }
-                Log.info( "webPort: {}", webPort );
-                Log.info( "announcedWebPort: {}", announcedWebPort );
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, announcedWebProtocol, announcedWebHost, announcedWebPort, repository );
-
-                if ( maxFileSize != null )
-                {
-                    SlotManager.getInstance().setMaxFileSize( maxFileSize );
-                }
-                Log.info( "maxFileSize: {}", SlotManager.getInstance().getMaxFileSize() );
-
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, announcedWebProtocol, announcedWebHost, announcedWebPort, repository, maxFileSize );
                 launcher.start();
             }
         }
@@ -287,6 +302,17 @@ public class Launcher
 
     public void start()
     {
+        Log.info( "Starting external component with endpoint {}://{}:{}", announcedWebProtocol, announcedWebHost, announcedWebPort );
+        SlotManager.getInstance().setWebProtocol( announcedWebProtocol );
+        SlotManager.getInstance().setWebHost( announcedWebHost );
+        SlotManager.getInstance().setWebPort( announcedWebPort );
+
+        if ( maxFileSize != null )
+        {
+            SlotManager.getInstance().setMaxFileSize( maxFileSize );
+        }
+        Log.info( "maxFileSize: {}", SlotManager.getInstance().getMaxFileSize() );
+
         Server jetty = null;
         ExternalComponentManager manager = null;
         try
@@ -310,9 +336,7 @@ public class Launcher
 
             Log.info( "Webserver started at {}:{}", connector.getHost(), connector.getLocalPort() );
 
-            final URL endpoint = new URL( announcedWebProtocol, announcedWebHost, announcedWebPort, "" );
-            Log.info( "Starting external component with endpoint {}", endpoint.toExternalForm() );
-            final Component component = new Component( domain, endpoint );
+            final Component component = new Component( domain );
             manager = new ExternalComponentManager( xmppHost, xmppPort );
             if ( sharedSecret != null )
             {

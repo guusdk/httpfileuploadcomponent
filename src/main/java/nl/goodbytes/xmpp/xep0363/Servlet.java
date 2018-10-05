@@ -25,7 +25,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.net.URI;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 
@@ -190,7 +191,15 @@ public class Servlet extends HttpServlet
             }
         }
 
-        resp.setHeader( "Location", URI.create( req.getRequestURL().toString() ).toASCIIString() );
+        try
+        {
+            resp.setHeader( "Location", slot.getGetUrl().toExternalForm() );
+        }
+        catch ( URISyntaxException | MalformedURLException e )
+        {
+            Log.warn( "Unable to calculate GET URL for {}", slot, e );
+        }
+
         resp.setStatus( HttpServletResponse.SC_CREATED );
         Log.info( "... responded with CREATED. Stored data from the request body in the repository." );
     }

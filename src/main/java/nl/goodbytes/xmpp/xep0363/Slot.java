@@ -19,6 +19,10 @@ package nl.goodbytes.xmpp.xep0363;
 
 import org.xmpp.packet.JID;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
 
@@ -60,5 +64,47 @@ public class Slot
     public UUID getUuid()
     {
         return uuid;
+    }
+
+    public URL getPutUrl() throws URISyntaxException, MalformedURLException
+    {
+        return getURL();
+    }
+
+    public URL getGetUrl() throws URISyntaxException, MalformedURLException
+    {
+        return getURL();
+    }
+
+    private URL getURL() throws URISyntaxException, MalformedURLException
+    {
+        // First, use URI to properly encode all components.
+        final URI uri = new URI(
+            SlotManager.getInstance().getWebProtocol(),
+            null, // userinfo
+            SlotManager.getInstance().getWebHost(),
+            SlotManager.getInstance().getWebPort(),
+            "/" + uuid.toString() + "/" + filename,
+            null, // query
+            null // fragment
+        );
+
+        // Then, ensure that the URL contains US-ASCII characters only, to prevent issues with some clients.
+        final String usascii = uri.toASCIIString();
+
+        // Finally, transform the result into an URL.
+        return new URL( usascii );
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Slot{" +
+            "uuid=" + uuid +
+            ", creationDate=" + creationDate +
+            ", filename='" + filename + '\'' +
+            ", creator=" + creator +
+            ", size=" + size +
+            '}';
     }
 }
