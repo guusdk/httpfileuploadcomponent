@@ -17,6 +17,7 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
+import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

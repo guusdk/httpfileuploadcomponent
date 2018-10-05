@@ -15,8 +15,9 @@
  *
  */
 
-package nl.goodbytes.xmpp.xep0363;
+package nl.goodbytes.xmpp.xep0363.repository;
 
+import nl.goodbytes.xmpp.xep0363.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,26 +34,24 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.READ;
 
 /**
- * A repository of files, backed by a temporary directory.
- *
- * This implementations makes no guarantees about the availability of data that is stored. Files might be purged without
- * notice.
+ * A repository of files, backed by a (presumably local) file system.
  *
  * @author Guus der Kinderen, guus@goodbytes.nl
  */
-public class TempDirectoryRepository implements Repository
+public abstract class AbstractFileSystemRepository implements Repository
 {
-    private static final Logger Log = LoggerFactory.getLogger( TempDirectoryRepository.class );
+    private static final Logger Log = LoggerFactory.getLogger( AbstractFileSystemRepository.class );
 
     private Timer timer;
 
     protected Path repository;
 
+    protected abstract Path initializeRepository() throws IOException;
+
     @Override
     public void initialize() throws IOException
     {
-        repository = Files.createTempDirectory( "xmppfileupload" );
-        repository.toFile().deleteOnExit();
+        repository = initializeRepository();
 
         // Perform a synchronous purge before start, which ensurs that a) purging is possible, b) space is available.
         purge();
