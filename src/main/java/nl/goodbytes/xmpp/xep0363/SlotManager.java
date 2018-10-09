@@ -43,7 +43,7 @@ public class SlotManager
     private String webProtocol;
     private String webHost;
     private Integer webPort;
-
+    private String webContextRoot;
 
     private SlotManager()
     {
@@ -124,5 +124,15 @@ public class SlotManager
     public int getWebPort()
     {
         return webPort;
+    }
+
+    public String getWebContextRoot()
+    {
+        return webContextRoot;
+    }
+
+    public void setWebContextRoot( final String webContextRoot )
+    {
+        this.webContextRoot = webContextRoot;
     }
 }
