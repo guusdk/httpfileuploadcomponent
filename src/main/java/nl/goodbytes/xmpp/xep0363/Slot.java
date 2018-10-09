@@ -78,13 +78,23 @@ public class Slot
 
     private URL getURL() throws URISyntaxException, MalformedURLException
     {
+        final String path;
+        if ( SlotManager.getInstance().getWebContextRoot().endsWith( "/" ) )
+        {
+            path = SlotManager.getInstance().getWebContextRoot() + uuid.toString() + "/" + filename;
+        }
+        else
+        {
+            path = SlotManager.getInstance().getWebContextRoot() + "/" + uuid.toString() + "/" + filename;
+        }
+
         // First, use URI to properly encode all components.
         final URI uri = new URI(
             SlotManager.getInstance().getWebProtocol(),
             null, // userinfo
             SlotManager.getInstance().getWebHost(),
             SlotManager.getInstance().getWebPort(),
-            "/" + uuid.toString() + "/" + filename,
+            path,
             null, // query
             null // fragment
         );

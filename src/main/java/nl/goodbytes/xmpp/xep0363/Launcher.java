@@ -45,6 +45,7 @@ public class Launcher
     private static final Logger Log = LoggerFactory.getLogger( Launcher.class );
     private final String xmppHost;
     private final Integer xmppPort;
+    private final String webContextRoot;
     private final String domain;
     private final String sharedSecret;
     private final String webHost;
@@ -52,10 +53,11 @@ public class Launcher
     private final String announcedWebProtocol;
     private final String announcedWebHost;
     private final Integer announcedWebPort;
+    private final String announcedWebContextRoot;
     private final Repository repository;
     private final Long maxFileSize;
 
-    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, Repository repository, Long maxFileSize )
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize )
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
@@ -63,9 +65,11 @@ public class Launcher
         this.sharedSecret = sharedSecret;
         this.webHost = webHost != null ? webHost : getPublicAddress();
         this.webPort = webPort != null ? webPort : 12121;
+        this.webContextRoot = webContextRoot != null ? (webContextRoot.startsWith( "/" ) ? webContextRoot : "/" + webContextRoot) : "/";
         this.announcedWebProtocol = announcedWebProtocol != null ? announcedWebProtocol : "http";
         this.announcedWebHost = announcedWebHost != null ? announcedWebHost : this.webHost;
         this.announcedWebPort = announcedWebPort != null ? announcedWebPort : this.webPort;
+        this.announcedWebContextRoot = announcedWebContextRoot != null ? announcedWebContextRoot : this.webContextRoot;
         this.repository = repository != null ? repository : new TempDirectoryRepository();
         this.maxFileSize = maxFileSize != null ? maxFileSize : SlotManager.DEFAULT_MAX_FILE_SIZE;
     }
@@ -100,6 +104,14 @@ public class Launcher
 
         options.addOption(
                 Option.builder()
+                        .longOpt( "webContextRoot" )
+                        .hasArg()
+                        .desc( "The context root of the web server through which the web frontend will be made avialable. Defaults to '/', the root context." )
+                        .build()
+        );
+
+        options.addOption(
+                Option.builder()
                         .longOpt( "announcedWebProtocol" )
                         .hasArg()
                         .desc( "The Protocol that is to be used by the end users. Defaults to http" )
@@ -120,6 +132,14 @@ public class Launcher
                         .hasArg()
                         .desc( "The TCP port number that is to be used by the end users (when different from webPort). Defaults to the webPort value." )
                         .type( Integer.class )
+                        .build()
+        );
+
+        options.addOption(
+                Option.builder()
+                        .longOpt( "announcedWebContextRoot" )
+                        .hasArg()
+                        .desc( "The context root that is to be used by the end users (when different from webContextRoot). Defaults to webContextRoot value." )
                         .build()
         );
 
@@ -198,9 +218,11 @@ public class Launcher
             {
                 final String webHost = line.getOptionValue( "webHost" );
                 final Integer webPort = line.hasOption( "webPort" ) ? Integer.parseInt(line.getOptionValue( "webPort" )) : null;
+                final String webContextRoot = line.hasOption( "webContextRoot" ) ? line.getOptionValue( "webContextRoot" ) : "/";
                 final String announcedWebProtocol = line.getOptionValue( "announcedWebProtocol" );
                 final String announcedWebHost = line.getOptionValue( "announcedWebHost" );
                 final Integer announcedWebPort = line.hasOption( "announcedWebPort" ) ? Integer.parseInt(line.getOptionValue( "announcedWebPort" )) : null;
+                final String announcedWebContextRoot = line.hasOption( "announcedWebContextRoot" ) ? line.getOptionValue( "announcedWebContextRoot" ) : "/";
                 final String xmppHost = line.getOptionValue( "xmppHost" );
                 final Integer xmppPort = line.hasOption( "xmppPort" ) ? Integer.parseInt(line.getOptionValue( "xmppPort" )) : null;
                 final String domain = line.getOptionValue( "domain" );
@@ -228,7 +250,7 @@ public class Launcher
                     repository = null;
                 }
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, announcedWebProtocol, announcedWebHost, announcedWebPort, repository, maxFileSize );
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize );
                 launcher.start();
             }
         }
@@ -302,10 +324,14 @@ public class Launcher
 
     public void start()
     {
-        Log.info( "Starting external component with endpoint {}://{}:{}", announcedWebProtocol, announcedWebHost, announcedWebPort );
+        final String local = "http://" + webHost + ":" + webPort + webContextRoot;
+        final String announced = announcedWebProtocol + "://" + announcedWebHost + ":" + announcedWebPort + announcedWebContextRoot;
+
+        Log.info( "Starting external component with HTTP endpoint {} (which is announced as: {})", local, announced );
         SlotManager.getInstance().setWebProtocol( announcedWebProtocol );
         SlotManager.getInstance().setWebHost( announcedWebHost );
         SlotManager.getInstance().setWebPort( announcedWebPort );
+        SlotManager.getInstance().setWebContextRoot( announcedWebContextRoot );
 
         if ( maxFileSize != null )
         {
@@ -330,7 +356,7 @@ public class Launcher
             jetty.addConnector( connector );
 
             final ServletContextHandler servletContextHandler = new ServletContextHandler();
-            servletContextHandler.addServlet( Servlet.class, "/" );
+            servletContextHandler.addServlet( Servlet.class, webContextRoot );
             jetty.setHandler( servletContextHandler );
             jetty.start();
 

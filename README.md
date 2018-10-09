@@ -52,44 +52,51 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
  
     $ java -jar httpfileuploadcomponent-1.0-jar-with-dependencies.jar --help
     usage: arguments
-            --announcedWebHost <arg>       The hostname or IP address that is to
-                                           be used by the end users (when
-                                           different from webHost). Defaults to
-                                           the webHost address.
-            --announcedWebPort <arg>       The TCP port number that is to be used
-                                           by the end users (when different from
-                                           webPort). Defaults to the webPort
-                                           value.
-            --announcedWebProtocol <arg>   The Protocol that is to be used by the
-                                           end users. Defaults to http
-            --domain <arg>                 The domain that will be used for the
-                                           component with the XMPP domain.
-            --fileRepo <arg>               Store files in a directory provided by
-                                           the file system. Provide the desired
-                                           path as a value. Path must exist.
-         -h,--help                         Displays this help text.
-            --maxFileSize <arg>            The maximum allowed size per file, in
-                                           bytes. Use -1 to disable file size
-                                           limit. Defaults to 5242880 (five MB).
-            --sharedSecret <arg>           The shared secret, that authenticates
-                                           this component with the XMPP domain.
-            --tempFileRepo                 Store files in the temporary directory
-                                           provided by the file system.
-            --webHost <arg>                The hostname or IP address on which the
-                                           webserver will be ran. Defaults to an
-                                           arbitrary, non-local address of this
-                                           machine.
-            --webPort <arg>                The TCP port number of the webserver.
-                                           Defaults to 12121.
-            --xmppHost <arg>               The FQDN or IP address (not XMPP domain
-                                           name) of the XMPP domain that this
-                                           component will connect to. Defaults to
-                                           'localhost'.
-            --xmppPort <arg>               The TCP port number on the xmppHost, to
-                                           which a connection will be made.
-                                           Defaults to 5275.
-
-
-
-
-  
+            --announcedWebContextRoot <arg>   The context root that is to be used
+                                              by the end users (when different
+                                              from webContextRoot). Defaults to
+                                              webContextRoot value.
+            --announcedWebHost <arg>          The hostname or IP address that is
+                                              to be used by the end users (when
+                                              different from webHost). Defaults to
+                                              the webHost address.
+            --announcedWebPort <arg>          The TCP port number that is to be
+                                              used by the end users (when
+                                              different from webPort). Defaults to
+                                              the webPort value.
+            --announcedWebProtocol <arg>      The Protocol that is to be used by
+                                              the end users. Defaults to http
+            --domain <arg>                    The domain that will be used for the
+                                              component with the XMPP domain.
+            --fileRepo <arg>                  Store files in a directory provided
+                                              by the file system. Provide the
+                                              desired path as a value. Path must
+                                              exist.
+         -h,--help                            Displays this help text.
+            --maxFileSize <arg>               The maximum allowed size per file,
+                                              in bytes. Use -1 to disable file
+                                              size limit. Defaults to 5242880
+                                              (five MB).
+            --sharedSecret <arg>              The shared secret, that
+                                              authenticates this component with
+                                              the XMPP domain.
+            --tempFileRepo                    Store files in the temporary
+                                              directory provided by the file
+                                              system.
+            --webContextRoot <arg>            The context root of the web server
+                                              through which the web frontend will
+                                              be made avialable. Defaults to '/',
+                                              the root context.
+            --webHost <arg>                   The hostname or IP address on which
+                                              the webserver will be ran. Defaults
+                                              to an arbitrary, non-local address
+                                              of this machine.
+            --webPort <arg>                   The TCP port number of the
+                                              webserver. Defaults to 12121.
+            --xmppHost <arg>                  The FQDN or IP address (not XMPP
+                                              domain name) of the XMPP domain that
+                                              this component will connect to.
+                                              Defaults to 'localhost'.
+            --xmppPort <arg>                  The TCP port number on the xmppHost,
+                                              to which a connection will be made.
+                                              Defaults to 5275.
