@@ -33,7 +33,7 @@ public class RepositoryManager
         return this.repository;
     }
 
-    public void destroy() throws IOException
+    public void destroy()
     {
         if ( this.repository != null )
         {

@@ -78,7 +78,7 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public void destroy() throws IOException
+    public void destroy()
     {
         if ( timer != null )
         {
@@ -87,7 +87,7 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public boolean contains( UUID uuid ) throws IOException
+    public boolean contains( UUID uuid )
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         final boolean result = Files.exists( path );
@@ -97,33 +97,56 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public String calculateETagHash( UUID uuid ) throws IOException
+    public String calculateETagHash( UUID uuid )
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
-        final String result = String.valueOf( path.hashCode() + Files.getLastModifiedTime( path ).hashCode() );
-
-        Log.debug( "UUID '{}' ETag value: {}", uuid, result );
-        return result;
+        try
+        {
+            final String result = String.valueOf( path.hashCode() + Files.getLastModifiedTime( path ).hashCode() );
+            Log.debug( "UUID '{}' ETag value: {}", uuid, result );
+            return result;
+        }
+        catch ( IOException e )
+        {
+            Log.warn( "UUID '{}' Unable to calculate ETag value.", uuid, e );
+            return null;
+        }
     }
 
     @Override
-    public String getContentType( UUID uuid ) throws IOException
+    public String getContentType( UUID uuid )
     {
-        final Path path = Paths.get( repository.toString(), uuid.toString() );
-        final String result = Files.probeContentType( path );
+        try
+        {
+            final Path path = Paths.get( repository.toString(), uuid.toString() );
+            final String result = Files.probeContentType( path );
 
-        Log.debug( "UUID '{}' content type: {}", uuid, result );
-        return result;
+            Log.debug( "UUID '{}' content type: {}", uuid, result );
+            return result;
+        }
+        catch ( IOException e )
+        {
+            Log.warn( "UUID '{}' Unable to determine the content type.", uuid, e );
+            return null;
+        }
     }
 
     @Override
-    public long getSize( UUID uuid ) throws IOException
+    public long getSize( UUID uuid )
     {
-        final Path path = Paths.get( repository.toString(), uuid.toString() );
-        final long result = Files.size( path );
+        try
+        {
+            final Path path = Paths.get( repository.toString(), uuid.toString() );
+            final long result = Files.size( path );
 
-        Log.debug( "UUID '{}' size: {} bytes", uuid, result );
-        return result;
+            Log.debug( "UUID '{}' size: {} bytes", uuid, result );
+            return result;
+        }
+        catch ( IOException e )
+        {
+            Log.warn( "UUID '{}' Unable to determine the content size.", uuid, e );
+            return -1;
+        }
     }
 
     @Override
