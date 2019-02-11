@@ -101,36 +101,27 @@ public class Servlet extends HttpServlet
             }
         }
 
-        try
+        final String contentType = repository.getContentType( uuid );
+        if ( contentType != null && !contentType.isEmpty() )
         {
-            final String contentType = repository.getContentType( uuid );
-            if ( contentType != null && !contentType.isEmpty() )
-            {
-                resp.setContentType( contentType );
-                Log.debug( "... setting content type '{}'.", contentType );
-            }
-        }
-        catch ( Exception e )
-        {
-            Log.warn( "Unable to determine the content type of '{}'", uuid, e );
+            resp.setContentType( contentType );
+            Log.debug( "... setting content type '{}'.", contentType );
         }
 
-        try
+        final long size = repository.getSize( uuid );
+        if ( size > 0 && size <= Integer.MAX_VALUE )
         {
-            final long size = repository.getSize( uuid );
-            if ( size > 0 && size <= Integer.MAX_VALUE )
-            {
-                resp.setContentLength( (int) size );
-                Log.debug( "... setting content length '{}'.", size );
-            }
-        }
-        catch ( Exception e )
-        {
-            Log.warn( "Unable to determine the file size of '{}'.", uuid, e );
+            resp.setContentLength( (int) size );
+            Log.debug( "... setting content length '{}'.", size );
         }
 
         resp.setHeader( "Cache-Control", "max-age=31536000" );
-        resp.setHeader( "ETag", repository.calculateETagHash( uuid ) );
+        final String etag = repository.calculateETagHash( uuid );
+        if ( etag != null )
+        {
+            resp.setHeader( "ETag", etag );
+            Log.debug( "... setting ETag '{}'.", etag );
+        }
 
         try ( final InputStream in = new BufferedInputStream( repository.getInputStream( uuid ) );
               final OutputStream out = resp.getOutputStream() )

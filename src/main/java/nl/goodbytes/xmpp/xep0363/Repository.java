@@ -31,15 +31,15 @@ public interface Repository
 {
     void initialize() throws IOException;
 
-    void destroy() throws IOException;
+    void destroy();
 
-    boolean contains( UUID uuid ) throws IOException;
+    boolean contains( UUID uuid );
 
-    String calculateETagHash( UUID uuid ) throws IOException;
+    String calculateETagHash( UUID uuid );
 
-    String getContentType( UUID uuid ) throws IOException;
+    String getContentType( UUID uuid );
 
-    long getSize( UUID uuid ) throws IOException;
+    long getSize( UUID uuid );
 
     // For reading data.
     InputStream getInputStream( UUID uuid ) throws IOException;
