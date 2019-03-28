@@ -42,6 +42,7 @@ public class SlotManager
     private TimeUnit putExpiryUnit = TimeUnit.MINUTES;
     private String webProtocol;
     private String webHost;
+    private String webPath = "";
     private Integer webPort;
 
 
@@ -114,6 +115,16 @@ public class SlotManager
     public String getWebHost()
     {
         return webHost;
+    }
+
+    public void setWebPath( final String webPath )
+    {
+        this.webPath = webPath;
+    }
+
+    public String getWebPath()
+    {
+        return webPath;
     }
 
     public void setWebPort( final int webPort )

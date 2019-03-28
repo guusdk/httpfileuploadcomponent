@@ -84,7 +84,7 @@ public class Slot
             null, // userinfo
             SlotManager.getInstance().getWebHost(),
             SlotManager.getInstance().getWebPort(),
-            "/" + uuid.toString() + "/" + filename,
+            "/" + SlotManager.getInstance().getWebPath() + "/" + uuid.toString() + "/" + filename,
             null, // query
             null // fragment
         );
