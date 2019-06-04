@@ -230,7 +230,6 @@ public class Component extends AbstractComponent
             slotElement.addElement( "put" ).addAttribute( "url", putUrl.toExternalForm() );
             slotElement.addElement( "get" ).addAttribute( "url", getUrl.toExternalForm() );
         }
-
         return response;
     }
 }
