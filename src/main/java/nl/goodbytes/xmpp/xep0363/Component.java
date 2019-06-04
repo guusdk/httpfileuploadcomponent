@@ -18,6 +18,8 @@
 package nl.goodbytes.xmpp.xep0363;
 
 import org.dom4j.Element;
+import org.dom4j.QName;
+import org.dom4j.DocumentHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmpp.component.AbstractComponent;
@@ -44,6 +46,8 @@ public class Component extends AbstractComponent
 
     private static final Logger Log = LoggerFactory.getLogger( Component.class );
     private final String name;
+
+    private static Element bodyElement;
 
     /**
      * Instantiates a new component.
@@ -114,6 +118,29 @@ public class Component extends AbstractComponent
     {
         final Element request = iq.getChildElement();
         final Collection<String> namespaces = Arrays.asList( NAMESPACE, NAMESPACE_EXP );
+        // Implements the TYPE_IQ jabber:iq:version protocol (version info xep-0092). Allows
+        // XMPP entities to query each other's application versions.  The server
+        // will respond with its current version info.
+        if ("query".equals(request.getQName().getName()) && "jabber:iq:version".equals( request.getNamespaceURI())) {
+            try {
+                Element answerElement = DocumentHelper.createElement(QName.get("query", "jabber:iq:version"));
+                answerElement.addElement("name").setText("Http File Upload Component");
+                answerElement.addElement("version").setText("1.2.0");
+                final String os = System.getProperty("os.name") + ' ' 
+                        + System.getProperty("os.version") + " ("
+                        + System.getProperty("os.arch") + ')';
+                final String java = "Java " + System.getProperty("java.version");
+                answerElement.addElement("os").setText(os + " - " + java);
+                IQ result = IQ.createResultIQ(iq);
+                result.setChildElement(answerElement);
+                return result;
+            } catch (Exception ex) {
+                final IQ result = IQ.createResultIQ( iq );
+                final PacketError error = new PacketError( PacketError.Condition.not_acceptable);
+                result.setError( error );
+                return result;
+            }
+        } 
         if ( !namespaces.contains( request.getNamespaceURI() ) || !request.getName().equals( "request" ) )
         {
             return null;
@@ -203,6 +230,7 @@ public class Component extends AbstractComponent
             slotElement.addElement( "put" ).addAttribute( "url", putUrl.toExternalForm() );
             slotElement.addElement( "get" ).addAttribute( "url", getUrl.toExternalForm() );
         }
+
         return response;
     }
 }
