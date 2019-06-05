@@ -48,6 +48,19 @@
     </developer>
   </developers>
 
+  <contributors>
+        <contributor>
+            <name>Manasse Ngudia</name>
+            <roles>
+                <role>developper contributor</role>
+            </roles>
+            <email>manasse@mnsuccess.com</email>
+            <organization>mnsuccess</organization>
+            <organizationUrl>https://mnsuccess.com</organizationUrl>
+            <timezone>+1</timezone>
+        </contributor>
+    </contributors>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
