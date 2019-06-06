@@ -128,10 +128,15 @@ public class Component extends AbstractComponent
                 Element answerElement = DocumentHelper.createElement(QName.get("query", "jabber:iq:version"));
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 Model model = reader.read(new FileReader("pom.xml"));
-                answerElement.addElement("name").setText(model.getName());
-                answerElement.addElement("description").setText(model.getDescription());
-                answerElement.addElement("version").setText(model.getVersion());
-                answerElement.addElement("Organization").setText(model.getOrganization().getName());
+                if (model.getName() != null){
+                    answerElement.addElement("name").setText(model.getName());
+                }
+                if(model .getDescription() != null){
+                    answerElement.addElement("description").setText(model.getDescription());
+                }
+                if (model.getVersion() != null){
+                    answerElement.addElement("version").setText(model.getVersion());
+                }
                 final String os = System.getProperty("os.name") + ' ' 
                         + System.getProperty("os.version") + " ("
                         + System.getProperty("os.arch") + ')';
