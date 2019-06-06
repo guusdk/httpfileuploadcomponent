@@ -47,7 +47,20 @@
       <timezone>+1</timezone>
     </developer>
   </developers>
-
+  
+  <contributors>
+    <contributor>
+        <name>Manasse Ngudia</name>
+        <roles>
+            <role>developer</role>
+        </roles>
+        <email>manasse@mnsuccess.com</email>
+        <organization>mnsuccess</organization>
+        <organizationUrl>https://mnsuccess.com</organizationUrl>
+        <timezone>+1</timezone>
+    </contributor>
+   </contributors>
+  
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -145,6 +158,12 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>19.0</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-model</artifactId>
+      <version>3.3.9</version>
     </dependency>
 
   </dependencies>
