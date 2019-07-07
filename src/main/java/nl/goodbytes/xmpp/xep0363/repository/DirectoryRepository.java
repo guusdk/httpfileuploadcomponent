@@ -11,9 +11,9 @@ import java.nio.file.Path;
 public class DirectoryRepository extends AbstractFileSystemRepository
 {
     private final Path path;
-    public DirectoryRepository( final Path path )
+    public DirectoryRepository( final Path path, boolean doPurge, PurgeStrategy purgeStrategy, Long purgeThreshold )
     {
-        super();
+        super( doPurge, purgeStrategy, purgeThreshold );
 
         this.path = path;
     }

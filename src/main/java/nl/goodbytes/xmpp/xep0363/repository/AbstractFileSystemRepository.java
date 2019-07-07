@@ -48,12 +48,44 @@ public abstract class AbstractFileSystemRepository implements Repository
 
     protected abstract Path initializeRepository() throws IOException;
 
+    protected final Comparator<File> purgeFileComparator;
+    protected final Long purgeThreshold;
+
+    public AbstractFileSystemRepository( boolean doPurge, PurgeStrategy purgeStrategy, Long purgeThreshold )
+    {
+        this.purgeThreshold = purgeThreshold;
+        if ( purgeStrategy == null )
+        {
+            throw new IllegalArgumentException( "Argument 'purgeStrategy' cannot be null" );
+        }
+
+        if ( doPurge )
+        {
+            switch ( purgeStrategy )
+            {
+                case lastAccess:
+                    purgeFileComparator = new FileComparatorByLastAccess();
+                    break;
+
+                case lastModification:
+                    purgeFileComparator = new FileComparatorByLastModified();
+
+                default:
+                    throw new IllegalArgumentException( "Unrecognized purge strategy " + purgeStrategy );
+            }
+        }
+        else
+        {
+            purgeFileComparator = null;
+        }
+    }
+
     @Override
     public void initialize() throws IOException
     {
         repository = initializeRepository();
 
-        // Perform a synchronous purge before start, which ensurs that a) purging is possible, b) space is available.
+        // Perform a synchronous purge before start, which ensures that a) purging is possible, b) space is available.
         purge();
 
         // Schedule periodic asynchronous purges.
@@ -165,6 +197,12 @@ public abstract class AbstractFileSystemRepository implements Repository
 
     public void purge() throws IOException
     {
+        if ( purgeFileComparator == null )
+        {
+            Log.debug( "Purging has been disabled by configuration. Skipping." );
+            return;
+        }
+
         final File[] files = repository.toFile().listFiles();
         if ( files == null )
         {
@@ -172,25 +210,14 @@ public abstract class AbstractFileSystemRepository implements Repository
             return;
         }
 
-        final long used = getUsedSpace( repository );
-        final long free = getUsableSpace( repository );
-        Log.debug( "The repository currently uses {} bytes, while there's {} bytes of usable space left.", used, free );
-
-        if ( used == 0 || used < free )
+        final long bytesNeedPurging = bytesNeedPurging();
+        if ( bytesNeedPurging <= 0 )
         {
-            Log.debug( "No need to purge the repository, as the free space is larger than the used space." );
+            Log.debug( "No need to purge the repository, as the purge threshold has not been reached (available bytes under the threshold: {}).", bytesNeedPurging * -1 );
             return;
         }
 
-        // Files modified the longest time ago are the first to be purged.
-        Arrays.sort( files, new Comparator<File>()
-        {
-            @Override
-            public int compare( File o1, File o2 )
-            {
-                return Long.compare( o1.lastModified(), o2.lastModified() );
-            }
-        } );
+        Arrays.sort( files, purgeFileComparator );
 
         long deletedTotal = 0;
         for ( final File file : files )
@@ -201,8 +228,9 @@ public abstract class AbstractFileSystemRepository implements Repository
 
             deletedTotal += deleted;
 
-            if ( used - deletedTotal <= 0 || used - deletedTotal < free + deletedTotal )
+            if ( deletedTotal >= bytesNeedPurging )
             {
+                Log.debug( "Purging repository: deleted: {} bytes, reached threshold of {} bytes.", deletedTotal, bytesNeedPurging );
                 break;
             }
         }
@@ -249,5 +277,29 @@ public abstract class AbstractFileSystemRepository implements Repository
         });
 
         return size.get();
+    }
+
+    /**
+     * Determines the number of bytes that aught to be cleaned up.
+     *
+     * When a non-positive value is returned, no purging is needed.
+     *
+     * @return The number of bytes that should be cleaned up (possibly a negative value).
+     */
+    protected long bytesNeedPurging() throws IOException
+    {
+        final long used = getUsedSpace( repository );
+        final long free = getUsableSpace( repository );
+        Log.debug( "The repository currently uses {} bytes, while there's {} bytes of usable space left.", used, free );
+
+        final boolean reachedPurgeThreshold;
+        if ( purgeThreshold == null )
+        {
+            return used - free;
+        }
+        else
+        {
+            return used - purgeThreshold;
+        }
     }
 }

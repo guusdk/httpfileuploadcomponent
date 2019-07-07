@@ -18,6 +18,7 @@
 package nl.goodbytes.xmpp.xep0363;
 
 import nl.goodbytes.xmpp.xep0363.repository.DirectoryRepository;
+import nl.goodbytes.xmpp.xep0363.repository.PurgeStrategy;
 import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
 import org.apache.commons.cli.*;
 import org.eclipse.jetty.server.Server;
@@ -70,7 +71,7 @@ public class Launcher
         this.announcedWebHost = announcedWebHost != null ? announcedWebHost : this.webHost;
         this.announcedWebPort = announcedWebPort != null ? announcedWebPort : this.webPort;
         this.announcedWebContextRoot = announcedWebContextRoot != null ? announcedWebContextRoot : this.webContextRoot;
-        this.repository = repository != null ? repository : new TempDirectoryRepository();
+        this.repository = repository;
         this.maxFileSize = maxFileSize != null ? maxFileSize : SlotManager.DEFAULT_MAX_FILE_SIZE;
     }
 
@@ -204,6 +205,35 @@ public class Launcher
                         .build()
         );
 
+        options.addOption(
+            Option.builder()
+                .longOpt( "purgeRepository" )
+                .hasArg()
+                .desc( "Remove old files to conserve storage space. Defaults to 'true'" )
+                .optionalArg( true )
+                .type( Boolean.class )
+                .build()
+        );
+
+        options.addOption(
+            Option.builder()
+                .longOpt( "purgeStrategy" )
+                .hasArg()
+                .desc( "Determines the order in which old files are purged. Acceptable values are 'lastAccess' and 'lastModification'. Defaults to 'lastModification'" )
+                .optionalArg( true )
+                .type( String.class )
+                .build()
+        );
+
+        options.addOption(
+            Option.builder()
+                .longOpt( "purgeThreshold" )
+                .hasArg()
+                .desc( "The storage space that can be taken by files in the repository before purging will start. If unset, purging occurs when the space used by the repository is more than the amount of free space left." )
+                .optionalArg( true )
+                .type( Long.class )
+                .build()
+        );
         try
         {
             final CommandLineParser parser = new DefaultParser();
@@ -228,11 +258,14 @@ public class Launcher
                 final String domain = line.getOptionValue( "domain" );
                 final String sharedSecret = line.getOptionValue( "sharedSecret" );
                 final Long maxFileSize = line.hasOption( "maxFileSize" ) ? Long.parseLong(line.getOptionValue( "maxFileSize" )) : null;
+                final boolean purgeRepository = line.hasOption( "purgeRepository" ) ? Boolean.parseBoolean( line.getOptionValue( "purgeRepository" ) ) : true;
+                final PurgeStrategy purgeStrategy = line.hasOption( "purgeStrategy" ) ? PurgeStrategy.valueOf( line.getOptionValue( "purgeStrategy" ) ) : PurgeStrategy.lastModification;
+                final Long purgeThreshold = line.hasOption( "purgeThreshold" ) ? Long.parseLong( line.getOptionValue( "purgeThreshold" ) ) : null;
 
                 final Repository repository;
                 if ( line.hasOption( "tempFileRepo" ) )
                 {
-                    repository = new TempDirectoryRepository();
+                    repository = new TempDirectoryRepository( purgeRepository, purgeStrategy, purgeThreshold );
                 }
                 else if (line.hasOption( "fileRepo"))
                 {
@@ -243,7 +276,7 @@ public class Launcher
                     } catch ( InvalidPathException e ) {
                         throw new ParseException( "Invalid value for 'fileRepo' option: " + e.getMessage() );
                     }
-                    repository = new DirectoryRepository( path );
+                    repository = new DirectoryRepository( path, purgeRepository, purgeStrategy, purgeThreshold );
                 }
                 else
                 {

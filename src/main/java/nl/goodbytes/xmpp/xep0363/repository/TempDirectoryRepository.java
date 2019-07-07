@@ -14,6 +14,11 @@ import java.nio.file.Path;
  */
 public class TempDirectoryRepository extends AbstractFileSystemRepository
 {
+    public TempDirectoryRepository( final boolean doPurge, final PurgeStrategy purgeStrategy, final Long purgeThreshold )
+    {
+        super( doPurge, purgeStrategy, purgeThreshold );
+    }
+
     @Override
     protected Path initializeRepository() throws IOException
     {
