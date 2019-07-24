@@ -43,6 +43,7 @@ public class SlotManager
     private String webProtocol;
     private String webHost;
     private Integer webPort;
+    private String webPath;
 
 
     private SlotManager()
@@ -124,5 +125,15 @@ public class SlotManager
     public int getWebPort()
     {
         return webPort;
+    }
+
+    public void setWebPath( final String webPath )
+    {
+        this.webPath = webPath;
+    }
+
+    public String getWebPath()
+    {
+        return webPath;
     }
 }
