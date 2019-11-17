@@ -21,10 +21,8 @@ import nl.goodbytes.xmpp.xep0363.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.URLConnection;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -92,7 +90,7 @@ public abstract class AbstractFileSystemRepository implements Repository
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         final boolean result = Files.exists( path );
 
-        Log.debug( "UUID '{}' {} exist in respository.", uuid, result ? "does" : "does not" );
+        Log.debug( "UUID '{}' {} exist in repository.", uuid, result ? "does" : "does not" );
         return result;
     }
 
@@ -119,7 +117,22 @@ public abstract class AbstractFileSystemRepository implements Repository
         try
         {
             final Path path = Paths.get( repository.toString(), uuid.toString() );
-            final String result = Files.probeContentType( path );
+
+            String result;
+            try ( final InputStream is = Files.newInputStream( path ) ) {
+                Log.debug( "UUID '{}' Probing content type based on file content...", uuid );
+                result = URLConnection.guessContentTypeFromStream( is );
+            }
+
+            if ( result == null || result.isEmpty() ) {
+                Log.debug( "UUID '{}' Probing content type based on system installed file type detectors...", uuid );
+                result = Files.probeContentType( path );
+            }
+
+            if ( result == null || result.isEmpty() ) {
+                Log.debug( "UUID '{}' Probing content type based on file name...", uuid );
+                result = URLConnection.guessContentTypeFromName( path.getFileName().toString() );
+            }
 
             Log.debug( "UUID '{}' content type: {}", uuid, result );
             return result;
