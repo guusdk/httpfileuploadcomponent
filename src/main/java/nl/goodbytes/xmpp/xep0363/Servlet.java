@@ -17,17 +17,21 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -39,7 +43,7 @@ public class Servlet extends HttpServlet
 {
     private static final Logger Log = LoggerFactory.getLogger( Servlet.class );
 
-    public static UUID uuidFromPath( String path )
+    public static SecureUUID uuidFromPath( String path )
     {
         if ( path == null || path.isEmpty() )
         {
@@ -54,7 +58,7 @@ public class Servlet extends HttpServlet
 
         try
         {
-            return UUID.fromString( parts[ parts.length - 2 ] );
+            return SecureUUID.fromString( parts[ parts.length - 2 ] );
         }
         catch ( IllegalArgumentException e )
         {
@@ -74,7 +78,7 @@ public class Servlet extends HttpServlet
             return;
         }
 
-        final UUID uuid = uuidFromPath( req.getRequestURI() );
+        final SecureUUID uuid = uuidFromPath( req.getRequestURI() );
         if ( uuid == null )
         {
             resp.sendError( HttpServletResponse.SC_NOT_FOUND );
@@ -148,7 +152,7 @@ public class Servlet extends HttpServlet
             return;
         }
 
-        final UUID uuid = uuidFromPath( req.getRequestURI() );
+        final SecureUUID uuid = uuidFromPath( req.getRequestURI() );
         if ( uuid == null )
         {
             resp.sendError( HttpServletResponse.SC_BAD_REQUEST, "The request lacks a slot identifier on its path." );

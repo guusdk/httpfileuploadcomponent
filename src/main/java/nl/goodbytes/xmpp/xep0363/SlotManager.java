@@ -17,13 +17,12 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import java.util.concurrent.TimeUnit;
+
 import org.xmpp.packet.JID;
 
-import java.net.URL;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * A manager of HTTP slots.
@@ -36,7 +35,7 @@ public class SlotManager
 {
     public static final long DEFAULT_MAX_FILE_SIZE = 50 * 1024 * 1024;
     private static SlotManager INSTANCE = null;
-    private final Cache<UUID, Slot> slots;
+    private final Cache<SecureUniqueId, Slot> slots;
     private long maxFileSize = DEFAULT_MAX_FILE_SIZE;
     private long putExpiryValue = 5;
     private TimeUnit putExpiryUnit = TimeUnit.MINUTES;
@@ -85,7 +84,7 @@ public class SlotManager
         return slot;
     }
 
-    public Slot consumeSlotForPut( UUID uuid )
+    public Slot consumeSlotForPut( SecureUniqueId uuid )
     {
         final Slot slot = slots.getIfPresent( uuid );
         if ( slot != null )

@@ -20,7 +20,6 @@ package nl.goodbytes.xmpp.xep0363;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.UUID;
 
 /**
  * Stores uploaded files for later retrieval.
@@ -33,17 +32,17 @@ public interface Repository
 
     void destroy();
 
-    boolean contains( UUID uuid );
+    boolean contains( SecureUniqueId uuid );
 
-    String calculateETagHash( UUID uuid );
+    String calculateETagHash( SecureUniqueId uuid );
 
-    String getContentType( UUID uuid );
+    String getContentType( SecureUniqueId uuid );
 
-    long getSize( UUID uuid );
+    long getSize( SecureUniqueId uuid );
 
     // For reading data.
-    InputStream getInputStream( UUID uuid ) throws IOException;
+    InputStream getInputStream( SecureUniqueId uuid ) throws IOException;
 
     // For writing data.
-    OutputStream getOutputStream( UUID uuid ) throws IOException;
+    OutputStream getOutputStream( SecureUniqueId uuid ) throws IOException;
 }

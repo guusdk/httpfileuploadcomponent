@@ -17,14 +17,13 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
-import org.xmpp.packet.JID;
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
-import java.util.UUID;
+
+import org.xmpp.packet.JID;
 
 /**
  * Representation of a ticket that is allows a single file upload.
@@ -33,7 +32,7 @@ import java.util.UUID;
  */
 public class Slot
 {
-    private final UUID uuid = UUID.randomUUID(); // This is cryptographically 'strong'.
+    private final SecureUniqueId uuid = SecureUUID.generate(); // This is cryptographically 'strong'.
     private final Date creationDate = new Date();
     private final String filename;
     private final JID creator;
@@ -61,7 +60,7 @@ public class Slot
         return size;
     }
 
-    public UUID getUuid()
+    public SecureUniqueId getUuid()
     {
         return uuid;
     }
