@@ -17,19 +17,32 @@
 
 package nl.goodbytes.xmpp.xep0363.repository;
 
-import nl.goodbytes.xmpp.xep0363.Repository;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.READ;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLConnection;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.URLConnection;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static java.nio.file.StandardOpenOption.CREATE;
-import static java.nio.file.StandardOpenOption.READ;
+import nl.goodbytes.xmpp.xep0363.Repository;
+import nl.goodbytes.xmpp.xep0363.SecureUniqueId;
 
 /**
  * A repository of files, backed by a (presumably local) file system.
@@ -85,7 +98,7 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public boolean contains( UUID uuid )
+    public boolean contains( SecureUniqueId uuid )
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         final boolean result = Files.exists( path );
@@ -95,7 +108,7 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public String calculateETagHash( UUID uuid )
+    public String calculateETagHash( SecureUniqueId uuid )
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         try
@@ -112,7 +125,7 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public String getContentType( UUID uuid )
+    public String getContentType( SecureUniqueId uuid )
     {
         try
         {
@@ -145,7 +158,7 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public long getSize( UUID uuid )
+    public long getSize( SecureUniqueId uuid )
     {
         try
         {
@@ -163,14 +176,14 @@ public abstract class AbstractFileSystemRepository implements Repository
     }
 
     @Override
-    public InputStream getInputStream( UUID uuid ) throws IOException
+    public InputStream getInputStream( SecureUniqueId uuid ) throws IOException
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         return Files.newInputStream( path, READ );
     }
 
     @Override
-    public OutputStream getOutputStream( UUID uuid ) throws IOException
+    public OutputStream getOutputStream( SecureUniqueId uuid ) throws IOException
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         return Files.newOutputStream( path, CREATE );
