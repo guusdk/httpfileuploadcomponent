@@ -43,7 +43,7 @@ public class Servlet extends HttpServlet
 {
     private static final Logger Log = LoggerFactory.getLogger( Servlet.class );
 
-    public static SecureUUID uuidFromPath( String path )
+    public static SecureUniqueId uuidFromPath( String path )
     {
         if ( path == null || path.isEmpty() )
         {
@@ -58,7 +58,7 @@ public class Servlet extends HttpServlet
 
         try
         {
-            return SecureUUID.fromString( parts[ parts.length - 2 ] );
+            return SecureUniqueIdFactory.fromString( parts[ parts.length - 2 ] );
         }
         catch ( IllegalArgumentException e )
         {
@@ -78,7 +78,7 @@ public class Servlet extends HttpServlet
             return;
         }
 
-        final SecureUUID uuid = uuidFromPath( req.getRequestURI() );
+        final SecureUniqueId uuid = uuidFromPath( req.getRequestURI() );
         if ( uuid == null )
         {
             resp.sendError( HttpServletResponse.SC_NOT_FOUND );
@@ -152,7 +152,7 @@ public class Servlet extends HttpServlet
             return;
         }
 
-        final SecureUUID uuid = uuidFromPath( req.getRequestURI() );
+        final SecureUniqueId uuid = uuidFromPath( req.getRequestURI() );
         if ( uuid == null )
         {
             resp.sendError( HttpServletResponse.SC_BAD_REQUEST, "The request lacks a slot identifier on its path." );
