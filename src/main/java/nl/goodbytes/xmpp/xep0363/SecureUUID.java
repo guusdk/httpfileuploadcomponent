@@ -3,14 +3,17 @@ package nl.goodbytes.xmpp.xep0363;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class SecureUUID implements SecureUniqueId {
     private static final SecureRandom random = new SecureRandom();
     private static final Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
     private final String id;
+    private static final Pattern BASE64_REGEX = Pattern.compile("^[a-zA-Z0-9\\-_]+$");
     
-    public SecureUUID(String id) {
-    	if (id == null) {
+    private SecureUUID(String id) {
+    	if (id == null || id.length() != 27 
+    			|| !BASE64_REGEX.matcher(id).matches()) {
     		throw new IllegalArgumentException();
     	}
     	this.id = id;
@@ -25,12 +28,12 @@ public class SecureUUID implements SecureUniqueId {
     }
     
     public static SecureUUID fromString(String id) {
-        return new SecureUUID(id);
+    	return new SecureUUID(id);
     }
 
 	@Override
 	public int compareTo(SecureUniqueId o) {
-		if (o != null && o instanceof SecureUUID) {
+		if (o != null && o instanceof SecureUUID && id != null) {
 			return this.id.compareTo(((SecureUUID)o).id); 
 		}
 		
@@ -64,6 +67,12 @@ public class SecureUUID implements SecureUniqueId {
 			return System.identityHashCode(this);
 		}
 		return Objects.hash(this.id);
+	}
+	
+	public static void main(String...args) throws Exception {
+		for (int i=0; i < 30;i++)
+		System.out.println(new SecureUUID(SecureUUID.generate().toString()));
+		
 	}
     
 }
