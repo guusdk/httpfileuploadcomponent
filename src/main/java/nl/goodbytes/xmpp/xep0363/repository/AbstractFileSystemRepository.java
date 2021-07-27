@@ -20,7 +20,9 @@ package nl.goodbytes.xmpp.xep0363.repository;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.READ;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -132,7 +134,7 @@ public abstract class AbstractFileSystemRepository implements Repository
             final Path path = Paths.get( repository.toString(), uuid.toString() );
 
             String result;
-            try ( final InputStream is = Files.newInputStream( path ) ) {
+            try ( final InputStream is = new BufferedInputStream( new FileInputStream( path.toFile() ) ) ) {
                 Log.debug( "UUID '{}' Probing content type based on file content...", uuid );
                 result = URLConnection.guessContentTypeFromStream( is );
             }
