@@ -48,6 +48,7 @@ public class Launcher
     private final String webContextRoot;
     private final String domain;
     private final String sharedSecret;
+    private final String webProtocol;
     private final String webHost;
     private final Integer webPort;
     private final String announcedWebProtocol;
@@ -57,16 +58,17 @@ public class Launcher
     private final Repository repository;
     private final Long maxFileSize;
 
-    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize )
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webProtocol, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize )
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
         this.domain = domain != null ? domain : "upload";
         this.sharedSecret = sharedSecret;
+        this.webProtocol = webProtocol != null ? webProtocol : "http";
         this.webHost = webHost != null ? webHost : getPublicAddress();
         this.webPort = webPort != null ? webPort : 12121;
         this.webContextRoot = webContextRoot != null ? (webContextRoot.startsWith( "/" ) ? webContextRoot : "/" + webContextRoot) : "/";
-        this.announcedWebProtocol = announcedWebProtocol != null ? announcedWebProtocol : "http";
+        this.announcedWebProtocol = announcedWebProtocol != null ? announcedWebProtocol : this.webProtocol;
         this.announcedWebHost = announcedWebHost != null ? announcedWebHost : this.webHost;
         this.announcedWebPort = announcedWebPort != null ? announcedWebPort : this.webPort;
         this.announcedWebContextRoot = announcedWebContextRoot != null ? announcedWebContextRoot : this.webContextRoot;
@@ -82,6 +84,14 @@ public class Launcher
                 Option.builder( "h"     )
                         .longOpt( "help" )
                         .desc( "Displays this help text." )
+                        .build()
+        );
+
+        options.addOption(
+                Option.builder()
+                        .longOpt( "webProtocol" )
+                        .hasArg()
+                        .desc( "The protocol that is used to expose services by the webservice. Defaults to http" )
                         .build()
         );
 
@@ -106,7 +116,7 @@ public class Launcher
                 Option.builder()
                         .longOpt( "webContextRoot" )
                         .hasArg()
-                        .desc( "The context root of the web server through which the web frontend will be made avialable. Defaults to '/', the root context." )
+                        .desc( "The context root of the web server through which the web frontend will be made available. Defaults to '/', the root context." )
                         .build()
         );
 
@@ -114,7 +124,7 @@ public class Launcher
                 Option.builder()
                         .longOpt( "announcedWebProtocol" )
                         .hasArg()
-                        .desc( "The Protocol that is to be used by the end users. Defaults to http" )
+                        .desc( "The Protocol that is to be used by the end users. Defaults to the webProtocol value" )
                         .build()
         );
 
@@ -216,6 +226,7 @@ public class Launcher
             }
             else
             {
+                final String webProtocol = line.getOptionValue( "webProtocol" );
                 final String webHost = line.getOptionValue( "webHost" );
                 final Integer webPort = line.hasOption( "webPort" ) ? Integer.parseInt(line.getOptionValue( "webPort" )) : null;
                 final String webContextRoot = line.hasOption( "webContextRoot" ) ? line.getOptionValue( "webContextRoot" ) : "/";
@@ -250,7 +261,7 @@ public class Launcher
                     repository = null;
                 }
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize );
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webProtocol, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize );
                 launcher.start();
             }
         }
@@ -324,7 +335,7 @@ public class Launcher
 
     public void start()
     {
-        final String local = "http://" + webHost + ":" + webPort + webContextRoot;
+        final String local = webProtocol + "://" + webHost + ":" + webPort + webContextRoot;
         final String announced = announcedWebProtocol + "://" + announcedWebHost + ":" + announcedWebPort + announcedWebContextRoot;
 
         Log.info( "Starting external component with HTTP endpoint {} (which is announced as: {})", local, announced );
