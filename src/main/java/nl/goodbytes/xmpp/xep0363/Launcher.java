@@ -31,9 +31,7 @@ import java.net.*;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Enumeration;
+import java.util.*;
 
 /**
  * Serves as the 'main class', which will start the application.
@@ -57,8 +55,9 @@ public class Launcher
     private final String announcedWebContextRoot;
     private final Repository repository;
     private final Long maxFileSize;
+    private final boolean wildcardCORS;
 
-    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webProtocol, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize )
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webProtocol, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize, boolean wildcardCORS)
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
@@ -74,6 +73,7 @@ public class Launcher
         this.announcedWebContextRoot = announcedWebContextRoot != null ? announcedWebContextRoot : this.webContextRoot;
         this.repository = repository != null ? repository : new TempDirectoryRepository();
         this.maxFileSize = maxFileSize != null ? maxFileSize : SlotManager.DEFAULT_MAX_FILE_SIZE;
+        this.wildcardCORS = wildcardCORS;
     }
 
     public static void main( String[] args )
@@ -214,6 +214,13 @@ public class Launcher
                         .build()
         );
 
+        options.addOption(
+            Option.builder()
+                .longOpt( "wildcardCORS" )
+                .desc( "Add CORS headers that define a liberal access control regime (wildcard origin, various headers and methods)." )
+                .build()
+        );
+
         try
         {
             final CommandLineParser parser = new DefaultParser();
@@ -239,6 +246,7 @@ public class Launcher
                 final String domain = line.getOptionValue( "domain" );
                 final String sharedSecret = line.getOptionValue( "sharedSecret" );
                 final Long maxFileSize = line.hasOption( "maxFileSize" ) ? Long.parseLong(line.getOptionValue( "maxFileSize" )) : null;
+                final boolean wildcardCORS = line.hasOption("wildcardCORS");
 
                 final Repository repository;
                 if ( line.hasOption( "tempFileRepo" ) )
@@ -261,7 +269,7 @@ public class Launcher
                     repository = null;
                 }
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webProtocol, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize );
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webProtocol, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize, wildcardCORS );
                 launcher.start();
             }
         }
@@ -367,7 +375,7 @@ public class Launcher
             jetty.addConnector( connector );
 
             final ServletContextHandler servletContextHandler = new ServletContextHandler();
-            servletContextHandler.addServlet( Servlet.class, webContextRoot );
+            servletContextHandler.addServlet( Servlet.class, webContextRoot ).setInitParameter("wildcardCORS", String.valueOf(wildcardCORS));
             jetty.setHandler( servletContextHandler );
             jetty.start();
 

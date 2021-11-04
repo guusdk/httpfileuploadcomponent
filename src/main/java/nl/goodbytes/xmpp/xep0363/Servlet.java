@@ -67,6 +67,18 @@ public class Servlet extends HttpServlet
     }
 
     @Override
+    protected void service( HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException
+    {
+        if (Boolean.parseBoolean(getInitParameter("wildcardCORS"))) {
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Access-Control-Allow-Methods", "PUT, GET, HEAD, OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "Overwrite, Destination, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, If-Modified-Since, X-File-Name, Cache-Control");
+        }
+        super.service(request, response);
+    }
+
+    @Override
     protected void doGet( HttpServletRequest req, HttpServletResponse resp ) throws ServletException, IOException
     {
         Log.info( "Processing GET request... ({} requesting from {})", req.getRemoteAddr(), req.getRequestURI() );

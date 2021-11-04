@@ -33,7 +33,7 @@ Usage
 To run the application, execute
 
     java -jar httpfileuploadcomponent-<versionnumber>-jar-with-dependencies.jar
-    
+
 A number of arguments can (and probably should) be added. A common execution is:
 
     java -jar httpfileuploadcomponent-<versionnumber>-jar-with-dependencies.jar \
@@ -49,9 +49,9 @@ When end-users should interact with the webserver using a different address, the
 with remote proxies or port-forwarded network topologies.
 
 A full set of usage instructions are provided by adding the ``--help`` argument:
- 
+
     $ java -jar httpfileuploadcomponent-1.0-jar-with-dependencies.jar --help
-    usage: arguments
+        usage: arguments
             --announcedWebContextRoot <arg>   The context root that is to be used
                                               by the end users (when different
                                               from webContextRoot). Defaults to
@@ -65,7 +65,8 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
                                               different from webPort). Defaults to
                                               the webPort value.
             --announcedWebProtocol <arg>      The Protocol that is to be used by
-                                              the end users. Defaults to http
+                                              the end users. Defaults to the
+                                              webProtocol value
             --domain <arg>                    The domain that will be used for the
                                               component with the XMPP domain.
             --fileRepo <arg>                  Store files in a directory provided
@@ -85,7 +86,7 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
                                               system.
             --webContextRoot <arg>            The context root of the web server
                                               through which the web frontend will
-                                              be made avialable. Defaults to '/',
+                                              be made available. Defaults to '/',
                                               the root context.
             --webHost <arg>                   The hostname or IP address on which
                                               the webserver will be ran. Defaults
@@ -93,6 +94,13 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
                                               of this machine.
             --webPort <arg>                   The TCP port number of the
                                               webserver. Defaults to 12121.
+            --webProtocol <arg>               The protocol that is used to expose
+                                              services by the webservice. Defaults
+                                              to http
+            --wildcardCORS                    Add CORS headers that define a
+                                              liberal access control regime
+                                              (wildcard origin, various headers
+                                              and methods).
             --xmppHost <arg>                  The FQDN or IP address (not XMPP
                                               domain name) of the XMPP domain that
                                               this component will connect to.
