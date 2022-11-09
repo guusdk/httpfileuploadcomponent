@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2022 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -223,8 +223,8 @@ public class Component extends AbstractComponent
             return response;
         }
 
-        final URL putUrl = slot.getPutUrl();
-        final URL getUrl = slot.getGetUrl();
+        final URL putUrl = SlotManager.getPutUrl(slot);
+        final URL getUrl = SlotManager.getGetUrl(slot);
 
         Log.info( "Entity '{}' obtained slot for '{}' ({} bytes). PUT-URL: {} GET-URL: {}", iq.getFrom(), fileName, fileSize, putUrl, getUrl );
 

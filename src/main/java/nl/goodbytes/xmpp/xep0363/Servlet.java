@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2022 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -200,7 +200,7 @@ public class Servlet extends HttpServlet
 
         try
         {
-            resp.setHeader( "Location", slot.getGetUrl().toExternalForm() );
+            resp.setHeader( "Location", SlotManager.getGetUrl(slot).toExternalForm() );
         }
         catch ( URISyntaxException | MalformedURLException e )
         {

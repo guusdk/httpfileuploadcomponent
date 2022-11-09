@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2022 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import java.net.URL;
 import java.util.Date;
 
 import org.xmpp.packet.JID;
+
+import javax.annotation.Nonnull;
 
 /**
  * Representation of a ticket that is allows a single file upload.
@@ -65,44 +67,8 @@ public class Slot
         return uuid;
     }
 
-    public URL getPutUrl() throws URISyntaxException, MalformedURLException
-    {
-        return getURL();
-    }
-
-    public URL getGetUrl() throws URISyntaxException, MalformedURLException
-    {
-        return getURL();
-    }
-
-    private URL getURL() throws URISyntaxException, MalformedURLException
-    {
-        final String path;
-        if ( SlotManager.getInstance().getWebContextRoot().endsWith( "/" ) )
-        {
-            path = SlotManager.getInstance().getWebContextRoot() + uuid.toString() + "/" + filename;
-        }
-        else
-        {
-            path = SlotManager.getInstance().getWebContextRoot() + "/" + uuid.toString() + "/" + filename;
-        }
-
-        // First, use URI to properly encode all components.
-        final URI uri = new URI(
-            SlotManager.getInstance().getWebProtocol(),
-            null, // userinfo
-            SlotManager.getInstance().getWebHost(),
-            SlotManager.getInstance().getWebPort(),
-            path,
-            null, // query
-            null // fragment
-        );
-
-        // Then, ensure that the URL contains US-ASCII characters only, to prevent issues with some clients.
-        final String usascii = uri.toASCIIString();
-
-        // Finally, transform the result into an URL.
-        return new URL( usascii );
+    public String getFilename() {
+        return filename;
     }
 
     @Override

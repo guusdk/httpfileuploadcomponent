@@ -4,7 +4,7 @@
 
   <groupId>nl.goodbytes.xmpp.xep</groupId>
   <artifactId>httpfileuploadcomponent</artifactId>
-  <version>1.4.1-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
 
   <name>HTTP File Upload Component</name>
   <description>Implementation of an XMPP External Component that implements XEP-0363 'HTTP File Upload'.</description>

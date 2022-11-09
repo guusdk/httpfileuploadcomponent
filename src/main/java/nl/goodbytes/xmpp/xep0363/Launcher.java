@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2022 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package nl.goodbytes.xmpp.xep0363;
 
 import nl.goodbytes.xmpp.xep0363.repository.DirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
+import nl.goodbytes.xmpp.xep0363.slot.DefaultSlotProvider;
 import org.apache.commons.cli.*;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -54,6 +55,7 @@ public class Launcher
     private final Integer announcedWebPort;
     private final String announcedWebContextRoot;
     private final Repository repository;
+    private final SlotProvider slotProvider;
     private final Long maxFileSize;
     private final boolean wildcardCORS;
 
@@ -72,6 +74,7 @@ public class Launcher
         this.announcedWebPort = announcedWebPort != null ? announcedWebPort : this.webPort;
         this.announcedWebContextRoot = announcedWebContextRoot != null ? announcedWebContextRoot : this.webContextRoot;
         this.repository = repository != null ? repository : new TempDirectoryRepository();
+        this.slotProvider = new DefaultSlotProvider();
         this.maxFileSize = maxFileSize != null ? maxFileSize : SlotManager.DEFAULT_MAX_FILE_SIZE;
         this.wildcardCORS = wildcardCORS;
     }
@@ -347,6 +350,10 @@ public class Launcher
         final String announced = announcedWebProtocol + "://" + announcedWebHost + ":" + announcedWebPort + announcedWebContextRoot;
 
         Log.info( "Starting external component with HTTP endpoint {} (which is announced as: {})", local, announced );
+
+        Log.info( "Starting slot manager...");
+        SlotManager.getInstance().initialize( slotProvider );
+
         SlotManager.getInstance().setWebProtocol( announcedWebProtocol );
         SlotManager.getInstance().setWebHost( announcedWebHost );
         SlotManager.getInstance().setWebPort( announcedWebPort );
