@@ -136,7 +136,7 @@ public class Component extends AbstractComponent
                 if (model.getVersion() != null){
                     answerElement.addElement("version").setText(model.getVersion());
                 }
-                final String os = System.getProperty("os.name") + ' ' 
+                final String os = System.getProperty("os.name") + ' '
                         + System.getProperty("os.version") + " ("
                         + System.getProperty("os.arch") + ')';
                 final String java = "Java " + System.getProperty("java.version");
@@ -150,7 +150,7 @@ public class Component extends AbstractComponent
                 result.setError( error );
                 return result;
             }
-        } 
+        }
         if ( !namespaces.contains( request.getNamespaceURI() ) || !request.getName().equals( "request" ) )
         {
             return null;

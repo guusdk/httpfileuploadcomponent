@@ -47,7 +47,7 @@
       <timezone>+1</timezone>
     </developer>
   </developers>
-  
+
   <contributors>
     <contributor>
         <name>Manasse Ngudia</name>
@@ -60,7 +60,7 @@
         <timezone>+1</timezone>
     </contributor>
    </contributors>
-  
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
