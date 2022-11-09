@@ -17,6 +17,7 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,7 +33,7 @@ import javax.annotation.Nonnull;
  *
  * @author Guus der Kinderen, guus@goodbytes.nl
  */
-public class Slot
+public class Slot implements Serializable
 {
     private final SecureUniqueId uuid = SecureUUID.generate(); // This is cryptographically 'strong'.
     private final Date creationDate = new Date();
