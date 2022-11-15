@@ -63,12 +63,12 @@ public class SlotManager
     private Integer webPort;
     private String webContextRoot;
 
-    public long getMaxFileSize()
+    public Long getMaxFileSize()
     {
         return maxFileSize;
     }
 
-    public void setMaxFileSize( long maxFileSize )
+    public void setMaxFileSize( Long maxFileSize )
     {
         this.maxFileSize = maxFileSize;
     }
@@ -158,7 +158,7 @@ public class SlotManager
         this.webPort = webPort;
     }
 
-    public int getWebPort()
+    public Integer getWebPort()
     {
         return webPort;
     }
