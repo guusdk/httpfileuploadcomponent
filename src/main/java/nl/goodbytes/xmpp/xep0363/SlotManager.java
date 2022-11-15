@@ -112,7 +112,7 @@ public class SlotManager
         }
         else
         {
-            path = SlotManager.getInstance().getWebContextRoot() + slot.getUuid() + "/" + slot.getFilename();
+            path = SlotManager.getInstance().getWebContextRoot() + "/" + slot.getUuid() + "/" + slot.getFilename();
         }
 
         // First, use URI to properly encode all components.
