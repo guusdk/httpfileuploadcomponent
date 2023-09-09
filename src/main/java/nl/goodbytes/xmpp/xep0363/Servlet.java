@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2023 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -190,11 +190,32 @@ public class Servlet extends HttpServlet
         try ( final InputStream in = req.getInputStream();
               final OutputStream out = new BufferedOutputStream( repository.getOutputStream( slot.getUuid() ) ) )
         {
+            Log.debug("... receiving content ...");
             final byte[] buffer = new byte[ 1024 * 4 ];
             int bytesRead;
             while ( ( bytesRead = in.read( buffer ) ) != -1 )
             {
                 out.write( buffer, 0, bytesRead );
+            }
+        }
+
+        final MalwareScannerManager malwareScannerManager = MalwareScannerManager.getInstance();
+        if (malwareScannerManager.isEnabled()) {
+            try {
+                Log.debug("... scanning uploaded content for malware ...");
+                final MalwareScanner malwareScanner = malwareScannerManager.getMalwareScanner();
+                malwareScanner.scan(slot.getUuid());
+                Log.info("... malware scanning did not find malware ...");
+            } catch (MalwareDetectedException e) {
+                resp.sendError( HttpServletResponse.SC_BAD_REQUEST, "Malware detected in the upload!" );
+                repository.delete(slot.getUuid());
+                Log.warn("... responded with BAD_REQUEST. Malware detected in upload of {}.", req.getRemoteAddr(), e);
+                return;
+            } catch (Throwable t) {
+                resp.sendError( HttpServletResponse.SC_BAD_REQUEST, "Malware scanning failed" );
+                repository.delete(slot.getUuid());
+                Log.info("... responded with BAD_REQUEST. Malware scanner execution failed.", t);
+                return;
             }
         }
 
