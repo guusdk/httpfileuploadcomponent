@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2023 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,6 +189,13 @@ public abstract class AbstractFileSystemRepository implements Repository
     {
         final Path path = Paths.get( repository.toString(), uuid.toString() );
         return Files.newOutputStream( path, CREATE );
+    }
+
+    @Override
+    public boolean delete( SecureUniqueId uuid ) throws IOException
+    {
+        final Path path = Paths.get( repository.toString(), uuid.toString() );
+        return Files.deleteIfExists( path );
     }
 
     public void purge() throws IOException

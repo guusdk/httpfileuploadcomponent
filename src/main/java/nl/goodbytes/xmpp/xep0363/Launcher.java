@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2023 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
+import nl.goodbytes.xmpp.xep0363.clamav.ClamavMalwareScanner;
 import nl.goodbytes.xmpp.xep0363.repository.DirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.slot.DefaultSlotProvider;
@@ -32,6 +33,7 @@ import java.net.*;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.*;
 
 /**
@@ -58,8 +60,9 @@ public class Launcher
     private final SlotProvider slotProvider;
     private final Long maxFileSize;
     private final boolean wildcardCORS;
+    private final MalwareScanner malwareScanner;
 
-    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webProtocol, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize, boolean wildcardCORS)
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webProtocol, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize, boolean wildcardCORS, MalwareScanner malwareScanner)
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
@@ -77,6 +80,7 @@ public class Launcher
         this.slotProvider = new DefaultSlotProvider();
         this.maxFileSize = maxFileSize != null ? maxFileSize : SlotManager.DEFAULT_MAX_FILE_SIZE;
         this.wildcardCORS = wildcardCORS;
+        this.malwareScanner = malwareScanner;
     }
 
     public static void main( String[] args )
@@ -224,6 +228,23 @@ public class Launcher
                 .build()
         );
 
+        options.addOption(
+            Option.builder()
+                .longOpt( "clamavHost" )
+                .hasArg()
+                .desc( "The FQDN or IP address of the host running the optional ClamAV malware scanner, if any." )
+                .build()
+        );
+
+        options.addOption(
+            Option.builder()
+                .longOpt( "clamavPort" )
+                .hasArg()
+                .desc( "The TCP port number for the optional ClamAV malware scanner, if any." )
+                .type( Integer.class )
+                .build()
+        );
+
         try
         {
             final CommandLineParser parser = new DefaultParser();
@@ -250,6 +271,8 @@ public class Launcher
                 final String sharedSecret = line.getOptionValue( "sharedSecret" );
                 final Long maxFileSize = line.hasOption( "maxFileSize" ) ? Long.parseLong(line.getOptionValue( "maxFileSize" )) : null;
                 final boolean wildcardCORS = line.hasOption("wildcardCORS");
+                final String clamavHost = line.getOptionValue("clamavHost", null);
+                final Integer clamavPort = line.hasOption( "clamavPort" ) ? Integer.parseInt(line.getOptionValue( "clamavPort" )) : null;
 
                 final Repository repository;
                 if ( line.hasOption( "tempFileRepo" ) )
@@ -272,7 +295,14 @@ public class Launcher
                     repository = null;
                 }
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webProtocol, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize, wildcardCORS );
+                final MalwareScanner clamav;
+                if ( clamavHost != null ) {
+                    clamav = new ClamavMalwareScanner(clamavHost, clamavPort == null ? 3310 : clamavPort, Duration.ofSeconds(2));
+                } else {
+                    clamav = null;
+                }
+
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webProtocol, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize, wildcardCORS, clamav );
                 launcher.start();
             }
         }
@@ -371,6 +401,9 @@ public class Launcher
         {
             Log.info( "Starting repository..." );
             RepositoryManager.getInstance().initialize( repository );
+
+            Log.info( "Starting malware scanner...");
+            MalwareScannerManager.getInstance().initialize( malwareScanner );
 
             Log.info( "Starting webserver..." );
 

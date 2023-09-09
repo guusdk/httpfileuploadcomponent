@@ -67,13 +67,18 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
             --announcedWebProtocol <arg>      The Protocol that is to be used by
                                               the end users. Defaults to the
                                               webProtocol value
+            --clamavHost <arg>                The FQDN or IP address of the host
+                                              running the optional ClamAV malware
+                                              scanner, if any.
+            --clamavPort <arg>                The TCP port number for the optional
+                                              ClamAV malware scanner, if any.
             --domain <arg>                    The domain that will be used for the
                                               component with the XMPP domain.
             --fileRepo <arg>                  Store files in a directory provided
                                               by the file system. Provide the
                                               desired path as a value. Path must
                                               exist.
-         -h,--help                            Displays this help text.
+            -h,--help                         Displays this help text.
             --maxFileSize <arg>               The maximum allowed size per file,
                                               in bytes. Use -1 to disable file
                                               size limit. Defaults to 5242880
@@ -108,3 +113,21 @@ A full set of usage instructions are provided by adding the ``--help`` argument:
             --xmppPort <arg>                  The TCP port number on the xmppHost,
                                               to which a connection will be made.
                                               Defaults to 5275.
+
+Scanning for Malware
+--------------------
+To facilitate virus scanning, you can configure the application to use ClamAV. ClamAV is a third-party, open source
+(GPLv2) anti-virus toolkit, available at https://www.clamav.net/
+
+To configure this application to use ClamAV, install, configure and run clamav-daemon, the scanner daemon of ClamAV.
+Configure the daemon in such a way that Openfire can access it via TCP.
+
+Note: ClamAV is configured with a maximum file size. Ensure that this is at least as big as the `maxFileSize` that is
+provided as an argument to the HTTP File Upload Component.
+
+Then, start the HTTP File Upload Component application with the `clamavHost` and `clamavPort` arguments. When these are
+provided, the application will supply each file that is being uploaded to the ClamAV daemon for scanning. A file upload
+will fail when the ClamAV daemon could not be reached, or, obviously, when it detects malware.
+
+While malware scanning can offer some protection against distributing unwanted content, it has limitations. Particularly
+when the uploaded data is encrypted, the scanner is unlikely able to detect any malware in it.
