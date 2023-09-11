@@ -1,7 +1,5 @@
 HTTP File Upload Component
 ========
-[![Build Status](https://travis-ci.org/guusdk/httpfileuploadcomponent.svg?branch=master)](https://travis-ci.org/guusdk/httpfileuploadcomponent)
-[![Docker Build Status](https://img.shields.io/docker/build/guusdk/httpfileuploadcomponent.svg)](https://hub.docker.com/r/guusdk/httpfileuploadcomponent/)
 
 About
 -----
