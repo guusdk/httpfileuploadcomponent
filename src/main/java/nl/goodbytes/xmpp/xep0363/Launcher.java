@@ -17,6 +17,7 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
+import com.google.common.collect.ImmutableMap;
 import nl.goodbytes.xmpp.xep0363.clamav.ClamavMalwareScanner;
 import nl.goodbytes.xmpp.xep0363.repository.DirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
@@ -60,9 +61,10 @@ public class Launcher
     private final SlotProvider slotProvider;
     private final Long maxFileSize;
     private final boolean wildcardCORS;
+    private final String contentSecurityPolicy;
     private final MalwareScanner malwareScanner;
 
-    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webProtocol, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize, boolean wildcardCORS, MalwareScanner malwareScanner)
+    public Launcher( String xmppHost, Integer xmppPort, String domain, String sharedSecret, String webProtocol, String webHost, Integer webPort, String webContextRoot, String announcedWebProtocol, String announcedWebHost, Integer announcedWebPort, String announcedWebContextRoot, Repository repository, Long maxFileSize, boolean wildcardCORS, String contentSecurityPolicy, MalwareScanner malwareScanner)
     {
         this.xmppHost = xmppHost != null ? xmppHost : "localhost";
         this.xmppPort = xmppPort != null ? xmppPort : 5275;
@@ -80,6 +82,7 @@ public class Launcher
         this.slotProvider = new DefaultSlotProvider();
         this.maxFileSize = maxFileSize != null ? maxFileSize : SlotManager.DEFAULT_MAX_FILE_SIZE;
         this.wildcardCORS = wildcardCORS;
+        this.contentSecurityPolicy = contentSecurityPolicy != null ? contentSecurityPolicy : "default-src 'none'; frame-ancestors 'none';";
         this.malwareScanner = malwareScanner;
     }
 
@@ -230,6 +233,14 @@ public class Launcher
 
         options.addOption(
             Option.builder()
+                .longOpt( "contentSecurityPolicy" )
+                .hasArg()
+                .desc( "The value of the Content-Security-Policy header that is returned by the servlet. Defaults to 'default-src 'none'; frame-ancestors 'none';'." )
+                .build()
+        );
+
+        options.addOption(
+            Option.builder()
                 .longOpt( "clamavHost" )
                 .hasArg()
                 .desc( "The FQDN or IP address of the host running the optional ClamAV malware scanner, if any." )
@@ -271,6 +282,7 @@ public class Launcher
                 final String sharedSecret = line.getOptionValue( "sharedSecret" );
                 final Long maxFileSize = line.hasOption( "maxFileSize" ) ? Long.parseLong(line.getOptionValue( "maxFileSize" )) : null;
                 final boolean wildcardCORS = line.hasOption("wildcardCORS");
+                final String contentSecurityPolicy = line.hasOption("contentSecurityPolicy") ? line.getOptionValue("contentSecurityPolicy") : "default-src 'none'; frame-ancestors 'none';";
                 final String clamavHost = line.getOptionValue("clamavHost", null);
                 final Integer clamavPort = line.hasOption( "clamavPort" ) ? Integer.parseInt(line.getOptionValue( "clamavPort" )) : null;
 
@@ -302,7 +314,7 @@ public class Launcher
                     clamav = null;
                 }
 
-                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webProtocol, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize, wildcardCORS, clamav );
+                final Launcher launcher = new Launcher( xmppHost, xmppPort, domain, sharedSecret, webProtocol, webHost, webPort, webContextRoot, announcedWebProtocol, announcedWebHost, announcedWebPort, announcedWebContextRoot, repository, maxFileSize, wildcardCORS, contentSecurityPolicy, clamav );
                 launcher.start();
             }
         }
@@ -417,7 +429,12 @@ public class Launcher
             jetty.addConnector( connector );
 
             final ServletContextHandler servletContextHandler = new ServletContextHandler();
-            servletContextHandler.addServlet( Servlet.class, webContextRoot ).setInitParameter("wildcardCORS", String.valueOf(wildcardCORS));
+            servletContextHandler.addServlet( Servlet.class, webContextRoot ).setInitParameters(ImmutableMap.of(
+                "wildcardCORS", String.valueOf(wildcardCORS),
+                "contentSecurityPolicy", contentSecurityPolicy
+                )
+            );
+
             jetty.setHandler( servletContextHandler );
             jetty.start();
 
