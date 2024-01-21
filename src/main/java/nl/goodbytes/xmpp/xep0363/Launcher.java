@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2024 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -402,8 +402,10 @@ public class Launcher
             Log.info( "Starting repository..." );
             RepositoryManager.getInstance().initialize( repository );
 
-            Log.info( "Starting malware scanner...");
-            MalwareScannerManager.getInstance().initialize( malwareScanner );
+            if (malwareScanner != null) {
+                Log.info("Starting malware scanner...");
+                MalwareScannerManager.getInstance().initialize(malwareScanner);
+            }
 
             Log.info( "Starting webserver..." );
 
