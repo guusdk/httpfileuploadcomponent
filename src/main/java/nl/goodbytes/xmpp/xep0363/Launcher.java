@@ -22,9 +22,9 @@ import nl.goodbytes.xmpp.xep0363.repository.DirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.slot.DefaultSlotProvider;
 import org.apache.commons.cli.*;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.server.ServerConnector;
 import org.jivesoftware.whack.ExternalComponentManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -411,7 +411,7 @@ public class Launcher
 
             jetty = new Server();
 
-            final SelectChannelConnector connector = new SelectChannelConnector();
+            final ServerConnector connector = new ServerConnector(jetty);
             connector.setHost( webHost );
             connector.setPort( webPort );
             jetty.addConnector( connector );
