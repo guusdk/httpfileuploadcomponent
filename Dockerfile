@@ -1,7 +1,7 @@
-FROM maven:3-jdk-8
+FROM maven:3-eclipse-temurin-17
 COPY . .
 RUN mvn clean package
 
-FROM openjdk:8-jre-alpine
+FROM eclipse-temurin:17-alpine
 COPY --from=0 /target/httpfileuploadcomponent-*-SNAPSHOT-jar-with-dependencies.jar /opt/httpfileuploadcomponent.jar
 ENTRYPOINT ["java", "-jar", "/opt/httpfileuploadcomponent.jar"]
