@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2025 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,6 +75,17 @@ public class Servlet extends HttpServlet
             response.setHeader("Access-Control-Allow-Methods", "PUT, GET, HEAD, OPTIONS");
             response.setHeader("Access-Control-Allow-Headers", "Overwrite, Destination, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, If-Modified-Since, X-File-Name, Cache-Control");
         }
+
+        final String contentSecurityPolicy = getInitParameter("contentSecurityPolicy");
+        // Explicitly setting the CSP to empty will disable it.
+        if ( contentSecurityPolicy != null && !contentSecurityPolicy.isEmpty() )
+        {
+            response.setHeader( "Content-Security-Policy", contentSecurityPolicy );
+            Log.debug( "... setting Content-Security-Policy '{}'.", contentSecurityPolicy );
+        } else {
+            Log.debug( "... not setting Content-Security-Policy (not configured or intentionally blank)" );
+        }
+
         super.service(request, response);
     }
 
@@ -137,16 +148,6 @@ public class Servlet extends HttpServlet
         {
             resp.setHeader( "ETag", etag );
             Log.debug( "... setting ETag '{}'.", etag );
-        }
-
-        final String contentSecurityPolicy = getInitParameter("contentSecurityPolicy");
-        // Explicitly setting the CSP to empty will disable it.
-        if ( contentSecurityPolicy != null && !contentSecurityPolicy.isEmpty() )
-        {
-            resp.setHeader( "Content-Security-Policy", contentSecurityPolicy );
-            Log.debug( "... setting Content-Security-Policy '{}'.", contentSecurityPolicy );
-        } else {
-            Log.debug( "... not setting Content-Security-Policy (not configured or intentionally blank)" );
         }
 
         try ( final InputStream in = new BufferedInputStream( repository.getInputStream( uuid ) );
@@ -227,16 +228,6 @@ public class Servlet extends HttpServlet
                 Log.info("... responded with BAD_REQUEST. Malware scanner execution failed.", t);
                 return;
             }
-        }
-
-        final String contentSecurityPolicy = getInitParameter("contentSecurityPolicy");
-        // Explicitly setting the CSP to empty will disable it.
-        if ( contentSecurityPolicy != null && !contentSecurityPolicy.isEmpty() )
-        {
-            resp.setHeader( "Content-Security-Policy", contentSecurityPolicy );
-            Log.debug( "... setting Content-Security-Policy '{}'.", contentSecurityPolicy );
-        } else {
-            Log.debug( "... not setting Content-Security-Policy (not configured or intentionally blank)" );
         }
 
         try
