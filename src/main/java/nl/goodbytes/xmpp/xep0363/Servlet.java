@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2025 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2026 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,14 @@ public class Servlet extends HttpServlet
 {
     private static final Logger Log = LoggerFactory.getLogger( Servlet.class );
 
+    /**
+     * The Content-Security-Policy that is sent when the 'contentSecurityPolicy' init parameter is not set, for example
+     * when the servlet is embedded in another web server. It prevents scripts from running and forms from being
+     * submitted, and places no restriction on how other content (such as images, media and documents) is displayed.
+     * The standalone {@link Launcher} configures its own default.
+     */
+    private static final String DEFAULT_CONTENT_SECURITY_POLICY = "script-src 'none'; form-action 'none'";
+
     public static SecureUniqueId uuidFromPath( String path )
     {
         if ( path == null || path.isEmpty() )
@@ -76,14 +84,17 @@ public class Servlet extends HttpServlet
             response.setHeader("Access-Control-Allow-Headers", "Overwrite, Destination, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, If-Modified-Since, X-File-Name, Cache-Control");
         }
 
-        final String contentSecurityPolicy = getInitParameter("contentSecurityPolicy");
+        // Not configured, for example when the servlet is embedded in another web server: use the default.
+        final String configuredContentSecurityPolicy = getInitParameter( "contentSecurityPolicy" );
+        final String contentSecurityPolicy = configuredContentSecurityPolicy != null ? configuredContentSecurityPolicy : DEFAULT_CONTENT_SECURITY_POLICY;
+
         // Explicitly setting the CSP to empty will disable it.
-        if ( contentSecurityPolicy != null && !contentSecurityPolicy.isEmpty() )
+        if ( !contentSecurityPolicy.isEmpty() )
         {
             response.setHeader( "Content-Security-Policy", contentSecurityPolicy );
             Log.debug( "... setting Content-Security-Policy '{}'.", contentSecurityPolicy );
         } else {
-            Log.debug( "... not setting Content-Security-Policy (not configured or intentionally blank)" );
+            Log.debug( "... not setting Content-Security-Policy (intentionally blank)" );
         }
 
         super.service(request, response);
