@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2022-2026 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package nl.goodbytes.xmpp.xep0363.slot;
 
+import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import nl.goodbytes.xmpp.xep0363.SecureUniqueId;
@@ -25,6 +26,7 @@ import nl.goodbytes.xmpp.xep0363.SlotProvider;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 
 // TODO: quick 'n dirty singleton. Is this the best choice?
 // TODO: persist internal state to allow for restart survival.
@@ -34,9 +36,29 @@ public class DefaultSlotProvider implements SlotProvider
     private long putExpiryValue = 5;
     private TimeUnit putExpiryUnit = TimeUnit.MINUTES;
 
+    /**
+     * Creates a provider that times slot expiry with {@link System#nanoTime()}.
+     */
     public DefaultSlotProvider()
     {
+        this( System::nanoTime );
+    }
+
+    /**
+     * Creates a provider that times slot expiry with the given time source. This allows tests to control the passing
+     * of time.
+     *
+     * @param nanoTime a time source that behaves like {@link System#nanoTime()}.
+     */
+    DefaultSlotProvider(@Nonnull final LongSupplier nanoTime)
+    {
         slots = CacheBuilder.newBuilder()
+            .ticker( new Ticker() {
+                @Override
+                public long read() {
+                    return nanoTime.getAsLong();
+                }
+            })
             .expireAfterWrite( putExpiryValue, putExpiryUnit )
             .build();
     }
