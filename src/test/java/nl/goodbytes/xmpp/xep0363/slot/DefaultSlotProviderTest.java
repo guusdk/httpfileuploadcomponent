@@ -23,10 +23,19 @@ import org.junit.Test;
 import org.xmpp.packet.JID;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.LongSupplier;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies how {@link DefaultSlotProvider} hands out slots, and when they expire.
@@ -262,6 +271,115 @@ public class DefaultSlotProviderTest
 
         // Verify result.
         assertNull( "A slot should expire after five minutes, even when the time source overflowed in the meantime.", result );
+    }
+
+    /**
+     * Verifies that expired slots that are never consumed are removed, so they do not accumulate in memory.
+     */
+    @Test
+    public void whenExpiredSlotsAreNeverConsumed_ThenTheyAreEventuallyRemoved()
+    {
+        // Setup test fixture.
+        provider.create( newSlot() );
+        provider.create( newSlot() );
+        time.advance( Duration.ofMinutes( 5 ) );
+
+        // Execute system under test.
+        provider.create( newSlot() );
+
+        // Verify result.
+        assertEquals( "Creating a slot should remove the expired slots that were never consumed, leaving only the new one.", 1, provider.size() );
+    }
+
+    /**
+     * Verifies that removing expired slots leaves the slots that have not yet expired alone.
+     */
+    @Test
+    public void whenExpiredSlotsAreRemoved_ThenUnexpiredSlotsAreKept()
+    {
+        // Setup test fixture.
+        provider.create( newSlot() );
+        time.advance( Duration.ofMinutes( 3 ) );
+        provider.create( newSlot() );
+        time.advance( Duration.ofMinutes( 3 ) );
+
+        // Execute system under test.
+        provider.create( newSlot() );
+
+        // Verify result.
+        assertEquals( "Only the slot created six minutes ago should have been removed, leaving the one created three minutes ago and the new one.", 2, provider.size() );
+    }
+
+    /**
+     * Verifies that expired slots are also removed when a slot is consumed, not only when one is created.
+     */
+    @Test
+    public void whenSlotIsConsumed_ThenExpiredSlotsAreRemoved()
+    {
+        // Setup test fixture.
+        provider.create( newSlot() );
+        provider.create( newSlot() );
+        time.advance( Duration.ofMinutes( 5 ) );
+
+        // Execute system under test.
+        provider.consume( SecureUUID.generate() );
+
+        // Verify result.
+        assertEquals( "Consuming a slot should remove the expired slots that were never consumed.", 0, provider.size() );
+    }
+
+    /**
+     * Verifies that a slot is handed out only once, even when many threads try to consume it at the same moment.
+     */
+    @Test
+    public void whenSlotIsConsumedConcurrently_ThenItIsHandedOutOnlyOnce() throws Exception
+    {
+        // Setup test fixture.
+        final int runs = 100;
+        final int threads = 16;
+        final ExecutorService executor = Executors.newFixedThreadPool( threads );
+        final List<Integer> runsWithWrongCount = new ArrayList<>();
+
+        try
+        {
+            // Execute system under test.
+            for ( int run = 0; run < runs; run++ )
+            {
+                final Slot slot = newSlot();
+                provider.create( slot );
+
+                final CountDownLatch start = new CountDownLatch( 1 );
+                final List<Future<Slot>> results = new ArrayList<>();
+                for ( int i = 0; i < threads; i++ )
+                {
+                    results.add( executor.submit( () -> {
+                        start.await();
+                        return provider.consume( slot.getUuid() );
+                    } ) );
+                }
+                start.countDown();
+
+                int handedOut = 0;
+                for ( final Future<Slot> result : results )
+                {
+                    if ( result.get( 10, TimeUnit.SECONDS ) != null )
+                    {
+                        handedOut++;
+                    }
+                }
+                if ( handedOut != 1 )
+                {
+                    runsWithWrongCount.add( handedOut );
+                }
+            }
+        }
+        finally
+        {
+            executor.shutdownNow();
+        }
+
+        // Verify result.
+        assertTrue( "When " + threads + " threads consume the same slot at once, exactly one should get it. In " + runsWithWrongCount.size() + " of " + runs + " runs, the slot was handed out this many times instead: " + runsWithWrongCount, runsWithWrongCount.isEmpty() );
     }
 
     /**
