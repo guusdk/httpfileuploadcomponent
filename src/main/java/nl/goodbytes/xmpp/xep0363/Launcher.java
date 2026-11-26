@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024 Guus der Kinderen. All rights reserved.
+ * Copyright (c) 2017-2026 Guus der Kinderen. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 
 package nl.goodbytes.xmpp.xep0363;
 
-import com.google.common.collect.ImmutableMap;
 import nl.goodbytes.xmpp.xep0363.clamav.ClamavMalwareScanner;
 import nl.goodbytes.xmpp.xep0363.repository.DirectoryRepository;
 import nl.goodbytes.xmpp.xep0363.repository.TempDirectoryRepository;
@@ -429,7 +428,7 @@ public class Launcher
             jetty.addConnector( connector );
 
             final ServletContextHandler servletContextHandler = new ServletContextHandler();
-            servletContextHandler.addServlet( Servlet.class, webContextRoot ).setInitParameters(ImmutableMap.of(
+            servletContextHandler.addServlet( Servlet.class, webContextRoot ).setInitParameters(Map.of(
                 "wildcardCORS", String.valueOf(wildcardCORS),
                 "contentSecurityPolicy", contentSecurityPolicy
                 )
